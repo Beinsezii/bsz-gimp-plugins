@@ -1,0 +1,6 @@
+__pycache__/
+
+# Stored in separate git project as it's a generic Gtk 3 library useful (for me) outside of GIMP
+# The plugins all symlink to the bszgw.py in the git root, so all changes apply
+# Basically just drop the file from https://github.com/Beinsezii/BSZGW.git into the main folder and you're good
+/bszgw.py
