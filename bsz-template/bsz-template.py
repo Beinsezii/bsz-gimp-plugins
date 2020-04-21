@@ -14,7 +14,10 @@ gi.require_version('Gegl', '0.4')
 from gi.repository import GLib
 # from gi.repository import Gio
 import sys
+import os
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 import bszgw
+import bsz_gimp_lib
 
 
 class Test (Gimp.PlugIn):

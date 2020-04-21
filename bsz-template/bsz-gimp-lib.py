@@ -1,1 +1,0 @@
-../bsz-gimp-lib.py
