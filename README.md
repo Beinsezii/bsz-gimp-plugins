@@ -15,4 +15,4 @@ Produces both a light and a dark bloom based on thresholds, with as many config 
 </div>
 
 ## Installation
-Download the folder somewhere and add it as a 'plug-in' directory in your gimp preferences.
+Download the folder somewhere and add it as a 'plug-in' directory in your gimp preferences, or unpack the .tar into your existing plugins folder.
