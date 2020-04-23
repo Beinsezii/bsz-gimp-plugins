@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Use this for reference on gegl operations and their properties/inputs/outputs.
+Use these for reference on gegl operations and their properties/inputs/outputs.
 http://www.gegl.org/operations/
+https://gitlab.gnome.org/GNOME/gegl/-/tree/master/operations
 
 Also build the .gir files using g-ir-doc-tool for additional insight.
 If the docs don't have a description on something like class methods,
@@ -26,10 +27,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 import bszgw
-from bsz_gimp_lib import GEGL_COMPOSITORS
+# from bsz_gimp_lib import GEGL_COMPOSITORS
 
 
-class DualBloom(Gimp.PlugIn):
+class DualBloom2(Gimp.PlugIn):
     # GimpPlugIn virtual methods
     # Not completely sure how they work
     # Why do they have 'do_' in front when it's never mentioned in the gir docs
@@ -39,7 +40,7 @@ class DualBloom(Gimp.PlugIn):
         # so I'm going to ignore that for now.
 
         # script name as it shows up in the PDB
-        return ["bsz-dualbloom"]
+        return ["bsz-dualbloom2"]
 
     def do_create_procedure(self, name):
         # Will almost always be ImageProcedure using PLUGIN proctype
@@ -52,7 +53,7 @@ class DualBloom(Gimp.PlugIn):
         # Supported colorspaces
         procedure.set_image_types("RGB*, GRAY*")
         # Name in menu
-        procedure.set_menu_label("Dual Bloom")
+        procedure.set_menu_label("Dual Bloom 2")
         # Icon. See Gimp-3.0.gir docs and gimp's icon folder for others
         # Historically plugins that use the new Gegl operations use ICON_GEGL
         # while the rest use ICON_SYSTEM_RUN
@@ -61,8 +62,9 @@ class DualBloom(Gimp.PlugIn):
         procedure.add_menu_path('<Image>/Beinsezii/')
         # Help text. First set is in-menu, second is PDB
         procedure.set_documentation(
-            "Provides light and dark bloom using thresholds. See tooltips",
-            "Provides light and dark bloom using thresholds."
+            "Provides light and dark bloom using thresholds.\n"
+            "Based on GIMP/GEGL's existing bloom.",
+            "Provides light and dark bloom using thresholds.\n"
             "Only usable in interactive mode right now.",
             name
         )
@@ -70,10 +72,9 @@ class DualBloom(Gimp.PlugIn):
         procedure.set_attribution("Beinsezii", "Beinsezii", "2020")
         return procedure
 
-    # function that does the work.
-    def dualbloom(self, drawable, thresh_high, thresh_low,
-                  size_high, size_low, opacity_high, opacity_low,
-                  composite_high="gegl:overlay", composite_low="gegl:overlay"):
+    def dualbloom2(self, drawable, amount_high, amount_low,
+                   softness_high, softness_low, radius_high, radius_low,
+                   strength_high, strength_low):
 
         # Fairly certain mask_intersect() is the current selection mask
         intersect, x, y, width, height = drawable.mask_intersect()
@@ -91,55 +92,42 @@ class DualBloom(Gimp.PlugIn):
             Input = tree.create_child("gegl:buffer-source")
             Input.set_property("buffer", buff)
 
-            # Filter nodes for high threshold. See gegl.org/operations
-            Threshold_High = tree.create_child("gegl:threshold")
-            Threshold_High.set_property("value", thresh_high)
-            CTA_High = tree.create_child("gegl:color-to-alpha")
-            # hex was the only string I could get to work.
-            CTA_High.set_property("color", Gegl.Color.new("#000000"))
-            Blur_High = tree.create_child("gegl:gaussian-blur")
-            Blur_High.set_property("std-dev-x", size_high)
-            Blur_High.set_property("std-dev-y", size_high)
-            Opacity_High = tree.create_child("gegl:opacity")
-            Opacity_High.set_property("value", opacity_high)
-            Comp_High = tree.create_child(composite_high)
+            Bloom_High = tree.create_child("gegl:bloom")
+            Bloom_High.set_property("amount", amount_high)
+            Bloom_High.set_property("softness", softness_high)
+            Bloom_High.set_property("radius", radius_high)
+            Bloom_High.set_property("strength", strength_high)
+            Sub_High = tree.create_child("gegl:subtract")
+            Add_High = tree.create_child("gegl:add")
 
-            # Filter nodes for low threshold
-            Threshold_Low = tree.create_child("gegl:threshold")
-            Threshold_Low.set_property("value", thresh_low)
-            CTA_Low = tree.create_child("gegl:color-to-alpha")
-            CTA_Low.set_property("color", Gegl.Color.new("#ffffff"))
-            Blur_Low = tree.create_child("gegl:gaussian-blur")
-            Blur_Low.set_property("std-dev-x", size_low)
-            Blur_Low.set_property("std-dev-y", size_low)
-            Opacity_Low = tree.create_child("gegl:opacity")
-            Opacity_Low.set_property("value", opacity_low)
-            Comp_Low = tree.create_child(composite_low)
+            Invert_Low = tree.create_child("gegl:invert-gamma")
+            Bloom_Low = tree.create_child("gegl:bloom")
+            Bloom_Low.set_property("amount", amount_low)
+            Bloom_Low.set_property("softness", softness_low)
+            Bloom_Low.set_property("radius", radius_low)
+            Bloom_Low.set_property("strength", strength_low)
+            Invert_Low2 = tree.create_child("gegl:invert-gamma")
 
             # Output buffer node using temp buffer
             Output = tree.create_child("gegl:write-buffer")
             Output.set_property("buffer", shadow)
 
             # base image linked to the thresholds and Comp_Low
-            Input.link(Threshold_High)
-            Input.link(Threshold_Low)
-            Input.link(Comp_Low)
+            Input.link(Bloom_High)
+            Input.connect_to("output", Sub_High, "aux")
+            Input.link(Invert_Low)
 
-            # connect the low nodes to each other and Comp_High
-            Threshold_Low.link(CTA_Low)
-            CTA_Low.link(Blur_Low)
-            Blur_Low.link(Opacity_Low)
-            # Seems like `.link(node)` is shorthand for
-            # `.connect_to("output", node, "input")`
-            Opacity_Low.connect_to("output", Comp_Low, "aux")
-            Comp_Low.link(Comp_High)
+            # High bloom nodes
+            Bloom_High.link(Sub_High)
+            Sub_High.connect_to("output", Add_High, "aux")
 
-            # connect the high nodes to each other and Output
-            Threshold_High.link(CTA_High)
-            CTA_High.link(Blur_High)
-            Blur_High.link(Opacity_High)
-            Opacity_High.connect_to("output", Comp_High, "aux")
-            Comp_High.link(Output)
+            # Low bloom nodes
+            Invert_Low.link(Bloom_Low)
+            Bloom_Low.link(Invert_Low2)
+            Invert_Low2.link(Add_High)
+
+            # Combine
+            Add_High.link(Output)
 
             # Run the node tree
             Output.process()
@@ -174,69 +162,67 @@ class DualBloom(Gimp.PlugIn):
             gi.require_version('Gdk', '3.0')
             from gi.repository import Gdk
 
-            # sets default blur width to 1% of the mean length
             def_blur = round((drawable.width() + drawable.height()) / 2 * 0.01)
 
             # Creating all the UI widgets using my own BSZGW
-            th_tt = "Values {} this will be considered '{}' bloom"
-            thresh_high = bszgw.Adjuster("High Threshold",
-                                         0.80, 0, 1, 0.05, 0.1, decimals=2,
-                                         tooltip=th_tt.format('above', 'light')
+            am_tt = "Amount of {} bloom. Acts like a threshold."
+            amount_high = bszgw.Adjuster("High Amount",
+                                         15, 0, 100, 1, 5, decimals=2,
+                                         tooltip=am_tt.format('light')
                                          )
-            thresh_low = bszgw.Adjuster("Low Threshold",
-                                        0.35, 0, 1, 0.05, 0.1, decimals=2,
-                                        tooltip=th_tt.format('below', 'dark')
+            amount_low = bszgw.Adjuster("Low Amount",
+                                        35, 0, 100, 1, 5, decimals=2,
+                                        tooltip=am_tt.format('dark')
                                         )
 
-            s_tt = "Size of {} blur. Initial value set based on image size."
-            size_high = bszgw.Adjuster("High Blur Size",
-                                       def_blur, 0, 1500, 5, 10, decimals=2,
-                                       tooltip=s_tt.format('light'))
-            size_low = bszgw.Adjuster("Low Blur Size",
-                                      def_blur, 0, 1500, 5, 10, decimals=2,
-                                      tooltip=s_tt.format('dark'))
+            sf_tt = "Softness of {} bloom threshold selection"
+            softness_high = bszgw.Adjuster("High Softness",
+                                           25, 0, 100, 1, 5, decimals=2,
+                                           tooltip=sf_tt.format('light'))
+            softness_low = bszgw.Adjuster("Low Softness",
+                                          25, 0, 100, 1, 5, decimals=2,
+                                          tooltip=sf_tt.format('dark'))
 
-            o_tt = "Opacity of {} bloom."
-            opacity_high = bszgw.Adjuster("High Opacity",
-                                          0.25, -10, 10, 0.05, 0.1, decimals=2,
-                                          tooltip=o_tt.format('light'))
-            opacity_low = bszgw.Adjuster("Low Opacity",
-                                         0.1, -10, 10, 0.05, 0.1, decimals=2,
-                                         tooltip=o_tt.format('dark'))
+            rd_tt = "Size of {} blur. Initial value set based on image size."
+            radius_high = bszgw.Adjuster("High Radius",
+                                         def_blur, 0, 100, 1, 5, decimals=2,
+                                         tooltip=rd_tt.format('light'))
+            radius_low = bszgw.Adjuster("Low Radius",
+                                        def_blur, 0, 100, 1, 5, decimals=2,
+                                        tooltip=rd_tt.format('dark'))
 
-            dd_tt = "Compositing method for {} threshold.\n" \
-                    "Note this uses raw GEGL methods, so the results may be \
-                    different."
-            comp_high = bszgw.DropDown(
-                tooltip=dd_tt.format("High"),
-                vals_list=GEGL_COMPOSITORS,
-                value="svg:overlay",
-                enums=True,
-            )
-            comp_low = bszgw.DropDown(
-                tooltip=dd_tt.format("Low"),
-                vals_list=GEGL_COMPOSITORS,
-                value="svg:overlay",
-                enums=True,
-            )
+            st_tt = "Strength of {} bloom."
+            strength_high = bszgw.Adjuster("High Strength",
+                                           50, 0, 100, 1, 5, decimals=2,
+                                           tooltip=st_tt.format('light'))
+            strength_low = bszgw.Adjuster("Low Strength",
+                                          50, 0, 100, 1, 5, decimals=2,
+                                          tooltip=st_tt.format('dark'))
 
-            # save the size_low adjustment so it doesn't get lost when linking
-            s_l_adj = size_low.adjustment
+            # save the adjustments so they don't get lost when linking
+            s_l_adj = softness_low.adjustment
+            r_l_adj = radius_low.adjustment
 
-            # if 'chain' is active, size_low and size_high share adjustments
-            def chain_fn(chain):
-                if chain.get_active():
-                    size_low.adjustment = size_high.adjustment
+            def soft_chain_fn(widget):
+                if widget.get_active():
+                    softness_low.adjustment = softness_high.adjustment
                 else:
-                    size_low.adjustment = s_l_adj
-                    size_low.value = size_high.value
-            # # Gimp.ChainButton() icon is busted for some reason
-            # # All you have to do is uncomment one and comment the other
-            # size_chain = Gimp.ChainButton(active=True,
-            #                               position=Gtk.PositionType.TOP)
-            size_chain = bszgw.CheckBox("Link\nBlurs", True)
-            size_chain.connect("toggled", chain_fn)
-            chain_fn(size_chain)
+                    softness_low.adjustment = s_l_adj
+                    softness_low.value = softness_high.value
+            # Gimp.ChainButton() icon is busted for some reason
+            soft_chain = bszgw.CheckBox("Link", True)
+            soft_chain.connect("toggled", soft_chain_fn)
+            soft_chain_fn(soft_chain)
+
+            def radius_chain_fn(widget):
+                if widget.get_active():
+                    radius_low.adjustment = radius_high.adjustment
+                else:
+                    radius_low.adjustment = r_l_adj
+                    radius_low.value = radius_high.value
+            radius_chain = bszgw.CheckBox("Link", True)
+            radius_chain.connect("toggled", radius_chain_fn)
+            radius_chain_fn(radius_chain)
 
             # I'm using an oldschool dupe layer preview since that
             # cool live preview doesn't seem to be usable in gir yet,
@@ -261,11 +247,11 @@ class DualBloom(Gimp.PlugIn):
             # # the program without a UI.
             # to avoid retyping for updating the preview and regular runs
             def ui_run(drawable2):
-                self.dualbloom(drawable2,
-                               thresh_high.value, thresh_low.value,
-                               size_high.value, size_low.value,
-                               opacity_high.value, opacity_low.value,
-                               comp_high.value, comp_low.value)
+                self.dualbloom2(drawable2,
+                                amount_high.value, amount_low.value,
+                                softness_high.value, softness_low.value,
+                                radius_high.value, radius_low.value,
+                                strength_high.value, strength_low.value)
 
             # deletes self.preview_layer and thaws undo
             def clear_preview(*args):
@@ -281,41 +267,48 @@ class DualBloom(Gimp.PlugIn):
                 app.destroy()
             run_button = bszgw.Button("Run", run_button_fn)
 
+            def test_button_fn(widget):
+                clear_preview()
+                self.dualbloom2(drawable,
+                                amount_high.value, amount_low.value,
+                                softness_high.value, softness_low.value,
+                                radius_high.value, radius_low.value,
+                                strength_high.value, strength_low.value)
+
             # sets all vals to default. Maybe I should implement .reset() in
             # BSZGW so I can just `for widget in list: widget.reset()`
             def reset_button_fn(widget):
-                # Highs
-                thresh_high.value = 0.80
-                size_high.value = def_blur
-                opacity_high.value = 0.25
-                comp_high.value = "svg:overlay"
-                # Lows
-                thresh_low.value = 0.35
-                size_low.value = def_blur
-                opacity_low.value = 0.1
-                comp_low.value = "svg:overlay"
+                amount_high.value = 50
+                amount_low.value = 50
+                softness_high.value = 25
+                softness_low.value = 25
+                radius_high.value = def_blur
+                radius_low.value = def_blur
+                strength_high.value = 50
+                strength_low.value = 50
             reset_button = bszgw.Button("Reset Vals", reset_button_fn)
 
             # Connections for live preview.  GEGL's fast enough this
             # works better than a dedicated 'preview' button.
-            for widget in [thresh_high, thresh_low, size_high, size_low,
-                           opacity_high, opacity_low,
-                           ]:
+            for widget in [amount_high, amount_low,
+                           softness_high, softness_low,
+                           radius_high, radius_low,
+                           strength_high, strength_low]:
                 widget.slider.connect("button-release-event", preview)
             for widget in [reset_button, preview_check]:
                 widget.connect("clicked", preview)
 
             # widgets will be boxed together visually as shown
             box = bszgw.AutoBox([
-                [thresh_high, thresh_low],
-                [size_high, (size_chain, False, False, 0), size_low],
-                [opacity_high, opacity_low],
-                [comp_high, comp_low],
+                [amount_high, amount_low],
+                [softness_high, (soft_chain, False, False, 0), softness_low],
+                [radius_high, (radius_chain, False, False, 0), radius_low],
+                [strength_high, strength_low],
                 [(preview_check, False, False, 0), reset_button, run_button],
             ])
             # create the app window with the box
             app = bszgw.App(
-                "BSZ Dual Bloom", box, 800, 400,
+                "BSZ Dual Bloom 2", box, 800, 400,
                 # hints it as a pop-up instead of a full window.
                 hint=Gdk.WindowTypeHint.DIALOG,
             )
@@ -338,4 +331,4 @@ class DualBloom(Gimp.PlugIn):
 
 
 # load plugin into gimp
-Gimp.main(DualBloom.__gtype__, sys.argv)
+Gimp.main(DualBloom2.__gtype__, sys.argv)
