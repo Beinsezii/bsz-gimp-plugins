@@ -3,8 +3,9 @@
 printf -v date '%(%Y-%m-%d)T'
 
 tar -cahf bsz-gimp-plugins_${date}.tar \
-    bsz-dualbloom/bsz-dualbloom.py \
     bsz_gimp_lib.py \
-    bszgw.py
+    bszgw.py \
+    bsz-dualbloom/bsz-dualbloom.py \
+    bsz-dualbloom/bsz-dualbloom2.py \
 
 git tag ${date}
