@@ -19,6 +19,7 @@ Produces both a light and dark bloom, based on gimp/gegl's existing bloom. Need 
     <td>After</td>
   </tr>
 </table>
+
 ### Dual Bloom
 Produces both a light and a dark bloom based on thresholds, with as many config options as I can squeeze into GEGL. This preceeded Dual Bloom 2, and the results are similar but not exact.
 
