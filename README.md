@@ -7,12 +7,11 @@ Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Wil
 ## Current Plugins
 ### Dual Bloom
 Produces both a light and a dark bloom based on thresholds, with as many config options as I can squeeze into GEGL. Best explanation is to try it.
-<div class="column">
-<img src="./bsz-dualbloom/during.png" />
+
+<img width=400 src="./bsz-dualbloom/during.png" />
 <div class="row">
-<img src="./bsz-dualbloom/before.png" />
-<img src="./bsz-dualbloom/after.png" />
-</div>
+<img width=200 src="./bsz-dualbloom/before.png" />
+<img width=200 src="./bsz-dualbloom/after.png" />
 </div>
 
 ## Installation
