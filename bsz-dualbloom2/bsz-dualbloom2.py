@@ -280,14 +280,11 @@ class DualBloom2(Gimp.PlugIn):
             # sets all vals to default. Maybe I should implement .reset() in
             # BSZGW so I can just `for widget in list: widget.reset()`
             def reset_button_fn(widget):
-                amount_high.value = 50
-                amount_low.value = 50
-                softness_high.value = 25
-                softness_low.value = 25
-                radius_high.value = def_blur
-                radius_low.value = def_blur
-                strength_high.value = 50
-                strength_low.value = 50
+                for widget in [amount_high, amount_low,
+                               softness_high, softness_low,
+                               radius_high, radius_low,
+                               strength_high, strength_low]:
+                    widget.reset()
             reset_button = bszgw.Button("Reset Vals", reset_button_fn)
 
             # Connections for live preview.  GEGL's fast enough this
