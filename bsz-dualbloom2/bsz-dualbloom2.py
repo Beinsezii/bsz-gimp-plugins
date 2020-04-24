@@ -166,63 +166,65 @@ class DualBloom2(Gimp.PlugIn):
 
             # Creating all the UI widgets using my own BSZGW
             am_tt = "Amount of {} bloom. Acts like a threshold."
-            amount_high = bszgw.Adjuster("High Amount",
-                                         15, 0, 100, 1, 5, decimals=2,
-                                         tooltip=am_tt.format('light')
-                                         )
-            amount_low = bszgw.Adjuster("Low Amount",
-                                        35, 0, 100, 1, 5, decimals=2,
-                                        tooltip=am_tt.format('dark')
-                                        )
+            amount_high = bszgw.Adjuster.new("High Amount",
+                                             15, 0, 100, 1, 5, decimals=2,
+                                             tooltip=am_tt.format('light')
+                                             )
+            amount_low = bszgw.Adjuster.new("Low Amount",
+                                            35, 0, 100, 1, 5, decimals=2,
+                                            tooltip=am_tt.format('dark')
+                                            )
 
             sf_tt = "Softness of {} bloom threshold selection"
-            softness_high = bszgw.Adjuster("High Softness",
-                                           25, 0, 100, 1, 5, decimals=2,
-                                           tooltip=sf_tt.format('light'))
-            softness_low = bszgw.Adjuster("Low Softness",
-                                          25, 0, 100, 1, 5, decimals=2,
-                                          tooltip=sf_tt.format('dark'))
+            softness_high = bszgw.Adjuster.new("High Softness",
+                                               25, 0, 100, 1, 5, decimals=2,
+                                               tooltip=sf_tt.format('light'))
+            softness_low = bszgw.Adjuster.new("Low Softness",
+                                              25, 0, 100, 1, 5, decimals=2,
+                                              tooltip=sf_tt.format('dark'))
 
             rd_tt = "Size of {} blur. Initial value set based on image size."
-            radius_high = bszgw.Adjuster("High Radius",
-                                         def_blur, 0, 100, 1, 5, decimals=2,
-                                         tooltip=rd_tt.format('light'))
-            radius_low = bszgw.Adjuster("Low Radius",
-                                        def_blur, 0, 100, 1, 5, decimals=2,
-                                        tooltip=rd_tt.format('dark'))
+            radius_high = bszgw.Adjuster.new("High Radius",
+                                             def_blur, 0, 1500, 1, 5,
+                                             decimals=2, logarithmic=True,
+                                             tooltip=rd_tt.format('light'))
+            radius_low = bszgw.Adjuster.new("Low Radius",
+                                            def_blur, 0, 1500, 1, 5,
+                                            decimals=2, logarithmic=True,
+                                            tooltip=rd_tt.format('dark'))
 
             st_tt = "Strength of {} bloom."
-            strength_high = bszgw.Adjuster("High Strength",
-                                           50, 0, 100, 1, 5, decimals=2,
-                                           tooltip=st_tt.format('light'))
-            strength_low = bszgw.Adjuster("Low Strength",
-                                          50, 0, 100, 1, 5, decimals=2,
-                                          tooltip=st_tt.format('dark'))
+            strength_high = bszgw.Adjuster.new("High Strength",
+                                               50, 0, 1000, 1, 5,
+                                               decimals=2, logarithmic=True,
+                                               tooltip=st_tt.format('light'))
+            strength_low = bszgw.Adjuster.new("Low Strength",
+                                              50, 0, 1000, 1, 5,
+                                              decimals=2, logarithmic=True,
+                                              tooltip=st_tt.format('dark'))
 
-            # save the adjustments so they don't get lost when linking
-            s_l_adj = softness_low.adjustment
-            r_l_adj = radius_low.adjustment
+            # copies value from the Gtk.Adjustment that calls it to the
+            # widget specified
+            def chain(from_adj, chain, to_wid):
+                if chain.get_active():
+                    to_wid.value = from_adj.props.value
 
-            def soft_chain_fn(widget):
-                if widget.get_active():
-                    softness_low.adjustment = softness_high.adjustment
-                else:
-                    softness_low.adjustment = s_l_adj
-                    softness_low.value = softness_high.value
-            # Gimp.ChainButton() icon is busted for some reason
+            # Gimp.ChainButton's icon is borked.
+            # soft_chain = Gimp.ChainButton(active=True,
+            #                               position=Gtk.PositionType.TOP)
+            # radius_chain = Gimp.ChainButton(active=True,
+            #                                 position=Gtk.PositionType.TOP)
             soft_chain = bszgw.CheckBox("Link", True)
-            soft_chain.connect("toggled", soft_chain_fn)
-            soft_chain_fn(soft_chain)
-
-            def radius_chain_fn(widget):
-                if widget.get_active():
-                    radius_low.adjustment = radius_high.adjustment
-                else:
-                    radius_low.adjustment = r_l_adj
-                    radius_low.value = radius_high.value
             radius_chain = bszgw.CheckBox("Link", True)
-            radius_chain.connect("toggled", radius_chain_fn)
-            radius_chain_fn(radius_chain)
+
+            softness_high.adjustment.connect("value-changed", chain,
+                                             soft_chain, softness_low)
+            softness_low.adjustment.connect("value-changed", chain,
+                                            soft_chain, softness_high)
+            radius_high.adjustment.connect("value-changed", chain,
+                                           radius_chain, radius_low)
+            radius_low.adjustment.connect("value-changed", chain,
+                                          radius_chain, radius_high)
 
             # I'm using an oldschool dupe layer preview since that
             # cool live preview doesn't seem to be usable in gir yet,
@@ -294,7 +296,7 @@ class DualBloom2(Gimp.PlugIn):
                            softness_high, softness_low,
                            radius_high, radius_low,
                            strength_high, strength_low]:
-                widget.slider.connect("button-release-event", preview)
+                widget.scale.connect("button-release-event", preview)
             for widget in [reset_button, preview_check]:
                 widget.connect("clicked", preview)
 

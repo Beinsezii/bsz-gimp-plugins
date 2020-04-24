@@ -179,30 +179,42 @@ class DualBloom(Gimp.PlugIn):
 
             # Creating all the UI widgets using my own BSZGW
             th_tt = "Values {} this will be considered '{}' bloom"
-            thresh_high = bszgw.Adjuster("High Threshold",
-                                         0.80, 0, 1, 0.05, 0.1, decimals=2,
-                                         tooltip=th_tt.format('above', 'light')
-                                         )
-            thresh_low = bszgw.Adjuster("Low Threshold",
-                                        0.35, 0, 1, 0.05, 0.1, decimals=2,
-                                        tooltip=th_tt.format('below', 'dark')
-                                        )
+            thresh_high = bszgw.Adjuster.new(
+                "High Threshold",
+                0.80, 0, 1, 0.05, 0.1, decimals=2,
+                tooltip=th_tt.format('above', 'light')
+            )
+            thresh_low = bszgw.Adjuster.new(
+                "Low Threshold",
+                0.35, 0, 1, 0.05, 0.1, decimals=2,
+                tooltip=th_tt.format('below', 'dark')
+            )
 
             s_tt = "Size of {} blur. Initial value set based on image size."
-            size_high = bszgw.Adjuster("High Blur Size",
-                                       def_blur, 0, 1500, 5, 10, decimals=2,
-                                       tooltip=s_tt.format('light'))
-            size_low = bszgw.Adjuster("Low Blur Size",
-                                      def_blur, 0, 1500, 5, 10, decimals=2,
-                                      tooltip=s_tt.format('dark'))
+            size_high = bszgw.Adjuster.new(
+                "High Blur Size",
+                def_blur, 0, 1500, 5, 10,
+                decimals=2, logarithmic=True,
+                tooltip=s_tt.format('light')
+            )
+            size_low = bszgw.Adjuster.new(
+                "Low Blur Size",
+                def_blur, 0, 1500, 5, 10,
+                decimals=2, logarithmic=True,
+                tooltip=s_tt.format('dark')
+            )
 
             o_tt = "Opacity of {} bloom."
-            opacity_high = bszgw.Adjuster("High Opacity",
-                                          0.25, -10, 10, 0.05, 0.1, decimals=2,
-                                          tooltip=o_tt.format('light'))
-            opacity_low = bszgw.Adjuster("Low Opacity",
-                                         0.1, -10, 10, 0.05, 0.1, decimals=2,
-                                         tooltip=o_tt.format('dark'))
+            opacity_high = bszgw.Adjuster.new(
+                "High Opacity",
+                0.25, -10, 10, 0.05, 0.1, decimals=2,
+                tooltip=o_tt.format('light')
+            )
+            opacity_low = bszgw.Adjuster.new(
+                "Low Opacity",
+                0.1, -10, 10, 0.05, 0.1, decimals=2,
+                tooltip=o_tt.format('dark')
+            )
 
             dd_tt = "Compositing method for {} threshold.\n" \
                     "Note this uses raw GEGL methods, so the results may be \
@@ -220,23 +232,19 @@ class DualBloom(Gimp.PlugIn):
                 enums=True,
             )
 
-            # save the size_low adjustment so it doesn't get lost when linking
-            s_l_adj = size_low.adjustment
-
             # if 'chain' is active, size_low and size_high share adjustments
-            def chain_fn(chain):
+            def chain(from_adj, chain, to_wid):
                 if chain.get_active():
-                    size_low.adjustment = size_high.adjustment
-                else:
-                    size_low.adjustment = s_l_adj
-                    size_low.value = size_high.value
+                    to_wid.value = from_adj.props.value
             # # Gimp.ChainButton() icon is busted for some reason
             # # All you have to do is uncomment one and comment the other
             # size_chain = Gimp.ChainButton(active=True,
             #                               position=Gtk.PositionType.TOP)
             size_chain = bszgw.CheckBox("Link\nBlurs", True)
-            size_chain.connect("toggled", chain_fn)
-            chain_fn(size_chain)
+            size_high.adjustment.connect("value-changed", chain,
+                                         size_chain, size_low)
+            size_low.adjustment.connect("value-changed", chain,
+                                        size_chain, size_high)
 
             # I'm using an oldschool dupe layer preview since that
             # cool live preview doesn't seem to be usable in gir yet,
@@ -301,7 +309,7 @@ class DualBloom(Gimp.PlugIn):
             for widget in [thresh_high, thresh_low, size_high, size_low,
                            opacity_high, opacity_low,
                            ]:
-                widget.slider.connect("button-release-event", preview)
+                widget.scale.connect("button-release-event", preview)
             for widget in [reset_button, preview_check]:
                 widget.connect("clicked", preview)
 
