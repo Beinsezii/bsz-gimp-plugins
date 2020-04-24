@@ -6,7 +6,7 @@ Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Wil
 
 ## Current Plugins
 ### Dual Bloom 2
-Produces both a light and dark bloom, based on gimp/gegl's existing bloom. Need to figure out a better slider system, so right now entries are hard instead of soft-capped.
+Produces both a light and dark bloom, based on gimp/gegl's existing bloom.
 
 <img width=300 src="./bsz-dualbloom2/during.png" />
 <table class="img-compare">
