@@ -148,6 +148,7 @@ plugin = PlugIn(
     radius_chain,
     description="WIP",
     alt_description="Alt Desc WIP",
+    images="RGB*, GRAY*",
     preview_function=dual_bloom_2_preview,
 )
 

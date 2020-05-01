@@ -96,6 +96,11 @@ then later in the code you merely use `param.widget`"""
 
     @property
     @abstractmethod
+    def gproperty(self):
+        pass
+
+    @property
+    @abstractmethod
     def ui_value(self):
         """Returns/sets ui value. Usually a shadow of bszgw.Widget.value.
 'Why make this its own property instead of calling param.widget.value' you ask?
@@ -145,6 +150,16 @@ AKA a cool slider"""
         self.widget.adjustment.connect("value-changed", function, *args)
 
     @property
+    def gproperty(self):
+        return {self.name.lower().replace(' ', '-'):
+                (int if self.integer else float,
+                 self.name,
+                 self.name,  # desc?
+                 self.min, self.max, self.value,
+                 GObject.ParamFlags.READWRITE)
+                }
+
+    @property
     def ui_value(self):
         return self.widget.value
 
@@ -189,6 +204,10 @@ Currently only visually good for chaining across-columns."""
 
     def connect_preview(self, function, *args):
         pass
+
+    @property
+    def gproperty(self):
+        return None
 
     @property
     def ui_value(self):
@@ -238,12 +257,23 @@ Check out one of my scripts that uses it and you'll instantly go
     # Get & save properties
     def __init__(self, name: str, function: callable, *params: Param,
                  description: str, alt_description: str = None,
-                 preview_function: callable = None, images: str = "RGB*",
+                 preview_function: callable = None,
+                 procedure_name: str = None, images: str = "RGB*",
                  path: str = "<Image>/Beinsezii/", icon=Gimp.ICON_GEGL,
-                 author: str = "Beinsezii", date: str = "2020"):
+                 authors: str = "Beinsezii", copyright: str = None,
+                 date: str = "2020"):
         # {{{
+        if not procedure_name:
+            procedure_name = name.lower().replace(" ", "-")
         if not alt_description:
             alt_description = description
+        if not copyright:
+            copyright = authors
+        self.gproperties = {}
+        for param in params:
+            gproperty = param.gproperty
+            if gproperty:
+                self.gproperties.update(gproperty)
 
         class Procedure(Gimp.PlugIn):
             # {{{
@@ -258,6 +288,8 @@ PlugIn.run(), which I didn't even know was possible, since surely the
 self required by run() needs to go through PlugIn's __init__, right?
 If I figure out literally anything that's still an all-in-one builder solution
 and looks nicer I'll replace it ASAP."""
+            __gproperties__ = self.gproperties
+
             # GimpPlugIn virtual methods
             # Not completely sure how they work
             # Why do they have 'do_' in front
@@ -269,7 +301,7 @@ and looks nicer I'll replace it ASAP."""
                 # so I'm going to ignore that for now.
 
                 # script name as it shows up in the PDB
-                return [name.lower().replace(" ", "-")]
+                return [procedure_name]
                 # }}}
 
             def do_create_procedure(self2, name2):
@@ -298,7 +330,11 @@ and looks nicer I'll replace it ASAP."""
                     name2
                 )
                 # Maker man
-                procedure.set_attribution(author, author, date)
+                procedure.set_attribution(authors, copyright, date)
+
+                for key in self.gproperties:
+                    procedure.add_argument_from_property(self2, key)
+
                 return procedure
                 # }}}
             # }}}
