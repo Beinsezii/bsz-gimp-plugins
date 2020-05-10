@@ -7,6 +7,7 @@ Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Wil
 Should work with windows. Can't really test since there's no 2.99 builds yet. Everything's either python standard library or PyGobject, and gimp should bundle those as it's necessary for thier own python scripts.
 
 ## Current Plugins
+todo: get better example images.
 ### Dual Bloom 2
 Produces both a light and dark bloom, based on gimp/gegl's existing bloom. Arguably prettier than the OG Dual Bloom.
 
