@@ -269,11 +269,11 @@ Check out one of my scripts that uses it and you'll instantly go
             alt_description = description
         if not copyright:
             copyright = authors
-        self.gproperties = {}
+        gproperties = {}
         for param in params:
             gproperty = param.gproperty
             if gproperty:
-                self.gproperties.update(gproperty)
+                gproperties.update(gproperty)
 
         class Procedure(Gimp.PlugIn):
             # {{{
@@ -288,7 +288,7 @@ PlugIn.run(), which I didn't even know was possible, since surely the
 self required by run() needs to go through PlugIn's __init__, right?
 If I figure out literally anything that's still an all-in-one builder solution
 and looks nicer I'll replace it ASAP."""
-            __gproperties__ = self.gproperties
+            __gproperties__ = gproperties
 
             # GimpPlugIn virtual methods
             # Not completely sure how they work
@@ -332,7 +332,7 @@ and looks nicer I'll replace it ASAP."""
                 # Maker man
                 procedure.set_attribution(authors, copyright, date)
 
-                for key in self.gproperties:
+                for key in gproperties:
                     procedure.add_argument_from_property(self2, key)
 
                 return procedure

@@ -34,7 +34,7 @@ from bsz_gimp_lib import PlugIn, ParamNumber, ParamNumberChain
 def dual_bloom_2(image, drawable, amount_high, amount_low,
                  softness_high, softness_low, radius_high, radius_low,
                  strength_high, strength_low):
-
+    # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
     if intersect:
@@ -101,16 +101,21 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
         drawable.update(x, y, width, height)
         Gimp.displays_flush()
 
+        # }}}
+
 
 # Preview function. Just runs the same thing on a copy
 def dual_bloom_2_preview(image, drawable, *args):
+    # {{{
     preview_layer = drawable.copy()
     image.insert_layer(preview_layer, None, 0)
     dual_bloom_2(image, preview_layer, *args)
     return preview_layer
+    # }}}
 
 
 # Parameters from bsz_gimp_lib
+# {{{
 amount_high = ParamNumber("Amount High", 15, 0, 100)
 amount_low = ParamNumber("Amount Low", 35, 0, 100, ui_column=1)
 
@@ -131,6 +136,7 @@ softness_chain = ParamNumberChain("Softness Chain", True,
                                   softness_high, softness_low, ui_row=1)
 radius_chain = ParamNumberChain("Radius Chain", True,
                                 radius_high, radius_low, ui_row=1)
+# }}}
 
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
