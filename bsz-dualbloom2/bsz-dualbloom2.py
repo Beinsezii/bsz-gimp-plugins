@@ -24,7 +24,7 @@ from gi.repository import Gegl
 # from gi.repository import GLib
 # from gi.repository import Gio
 import sys
-import os
+import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 # import bszgw
 from bsz_gimp_lib import PlugIn, ParamNumber, ParamNumberChain

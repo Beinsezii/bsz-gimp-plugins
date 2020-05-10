@@ -31,6 +31,7 @@ import time
 
 
 def PDB(procedure: str, *args):
+    # {{{
     argsv = Gimp.ValueArray.new(len(args))
     for num, arg in enumerate(args):
         if isinstance(arg, str):
@@ -40,6 +41,7 @@ def PDB(procedure: str, *args):
 
         argsv.insert(num, GObject.Value(gtype, arg))
     return Gimp.get_pdb().run_procedure(procedure, argsv)
+    # }}}
 
 
 GEGL_COMPOSITORS = {
@@ -129,6 +131,47 @@ I intend to eventually use some gimp specific widgets when they're available"""
         """Assuming ui_value properties above are set up correctly,
 there's no reason to implement this differently on a class-by-class basis."""
         self.ui_value = self.value
+    # }}}
+
+
+class ParamCombo(Param):
+    # {{{
+    """Creates a BSZGW ComboBox from a dictionary"""
+    def __init__(self, name: str, dictionary: dict, value,
+                 ui_column: int = 0, ui_row: int = 0):
+        super(ParamCombo, self).__init__(name, value, ui_column, ui_row)
+        self.dictionary = dictionary
+
+    def create_widget(self):
+        if not self.widget:
+            # TODO: revise bszgw.DropDown into bszgw.ComboBox
+            self.widget = bszgw.DropDown(
+                tooltip=self.name,
+                vals_list=self.dictionary,
+                value=self.value,
+                enums=True,
+            )
+
+    def connect_preview(self, function, *args):
+        self.widget.connect("changed", function, *args)
+
+    @property
+    def gproperty(self):
+        return {self.name.lower().replace(' ', '-'):
+                (str,
+                 self.name,
+                 self.name,  # desc?
+                 self.value,
+                 GObject.ParamFlags.READWRITE)
+                }
+
+    @property
+    def ui_value(self):
+        return self.widget.value
+
+    @ui_value.setter
+    def ui_value(self, new):
+        self.widget.value = new
     # }}}
 
 
