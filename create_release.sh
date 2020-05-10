@@ -2,7 +2,7 @@
 
 printf -v date '%(%Y-%m-%d)T'
 
-tar -cahf bsz-gimp-plugins_${date}.tar \
+zip -q bsz-gimp-plugins_${date}.zip \
     bsz_gimp_lib.py \
     bszgw.py \
     bsz-dualbloom/bsz-dualbloom.py \
