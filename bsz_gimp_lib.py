@@ -30,6 +30,18 @@ import threading
 import time
 
 
+def PDB(procedure: str, *args):
+    argsv = Gimp.ValueArray.new(len(args))
+    for num, arg in enumerate(args):
+        if isinstance(arg, str):
+            gtype = GObject.TYPE_STRING
+        else:
+            raise ValueError("PDB Type not supported")
+
+        argsv.insert(num, GObject.Value(gtype, arg))
+    return Gimp.get_pdb().run_procedure(procedure, argsv)
+
+
 GEGL_COMPOSITORS = {
     # {{{
     "Source": "svg:src",
@@ -97,6 +109,7 @@ then later in the code you merely use `param.widget`"""
     @property
     @abstractmethod
     def gproperty(self):
+        """Returns a dictionary containing the gproperty for the parameter."""
         pass
 
     @property
@@ -288,6 +301,8 @@ PlugIn.run(), which I didn't even know was possible, since surely the
 self required by run() needs to go through PlugIn's __init__, right?
 If I figure out literally anything that's still an all-in-one builder solution
 and looks nicer I'll replace it ASAP."""
+
+            # basically create a dict of parameters the plugin takes
             __gproperties__ = gproperties
 
             # GimpPlugIn virtual methods
@@ -332,6 +347,7 @@ and looks nicer I'll replace it ASAP."""
                 # Maker man
                 procedure.set_attribution(authors, copyright, date)
 
+                # add the gproperties to the procedures
                 for key in gproperties:
                     procedure.add_argument_from_property(self2, key)
 
@@ -347,20 +363,19 @@ and looks nicer I'll replace it ASAP."""
         # }}}
 
     # I decided to name the function called by the PDB procedure 'run'
-    def run(self, procedure, run_mode, image, drawable, args, run_data):
+    def run(self, procedure, run_mode, image, drawable, argsv, run_data):
+        # convert the ValueArray into a regular list
+        args = [argsv.index(x) for x in range(argsv.length())]
+
         # run_mode 'NONINTERACTIVE' is if another plugin calls it through PDB
-        # I don't understand the __gproperties__ things yet so am ignoring.
         if run_mode == Gimp.RunMode.NONINTERACTIVE:
-            return "Non-interactive not supported."
+            self.function(image, drawable, *args)
 
         # run_mode 'WITH_LAST_VALS' is when you use Ctrl-F aka 'Repeat'
-        # seems the gimp shelf isn't implemented yet, so kinda useless
+        # seems the gimp shelf isn't implemented yet?
         if run_mode == Gimp.RunMode.WITH_LAST_VALS:
             # {{{
-            args = Gimp.ValueArray.new(1)
-            args.insert(0, GObject.Value(GObject.TYPE_STRING,
-                                         "Repeat not supported yet"))
-            Gimp.get_pdb().run_procedure('gimp-message', args)
+            PDB("gimp-message", "Repeate not supported yet")
             run_mode = Gimp.RunMode.INTERACTIVE
             # }}}
 
