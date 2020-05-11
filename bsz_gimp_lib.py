@@ -144,12 +144,11 @@ class ParamCombo(Param):
 
     def create_widget(self):
         if not self.widget:
-            # TODO: revise bszgw.DropDown into bszgw.ComboBox
-            self.widget = bszgw.DropDown(
+            self.widget = bszgw.ComboBox.new(
+                self.dictionary,
+                self.value,
                 tooltip=self.name,
-                vals_list=self.dictionary,
-                value=self.value,
-                enums=True,
+                show_ids=False,
             )
 
     def connect_preview(self, function, *args):
