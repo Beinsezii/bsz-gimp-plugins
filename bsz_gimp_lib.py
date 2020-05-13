@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""
-Shared code between plugins.
+"""Shared code between plugins.
 Use python's help() for prettier help info.
 """
 
@@ -19,7 +18,7 @@ from abc import ABC, abstractmethod
 # UI imports. Can't figure out a good way to only import these
 # in INTERACTIVE mode while keeping ui stuff in the params.
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk  # noqa: F401
 gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 import sys
@@ -85,6 +84,7 @@ GEGL_COMPOSITORS = {
 }  # }}}
 
 
+# TODO: add support for widget height/width using the new bszgw.Grid
 class Param(ABC):
     # {{{
     """Abstract class taken by PlugIn."""
@@ -455,8 +455,6 @@ and looks nicer I'll replace it ASAP."""
                     param.ui_reset()
             reset_button = bszgw.Button("Reset", reset_fn)
 
-            buttons_list = [run_button, reset_button]
-
             self.preview_layers = []
 
             # if any preview layers, delete them and thaw
@@ -486,10 +484,8 @@ and looks nicer I'll replace it ASAP."""
                             self.preview_layers += result
                 # }}}
 
-            # if preview_function, creates a preview checkbox in buttons_list
-            # and binds certain parts of widgets to preview_fn.
-            # Might be nicer to have parameters do the binding themselves
-            # in another non-abstract method that passes by default.
+            # creates preview_check, starts the live preview thread,
+            # and has the widgets connect to function
             if self.preview_function is not None:
                 # {{{
                 preview_thread = PreviewThread(preview_fn)
@@ -498,43 +494,30 @@ and looks nicer I'll replace it ASAP."""
                 preview_check.connect("clicked", preview_fn)
                 for param in self.params:
                     param.connect_preview(preview_thread.request_preview)
-                buttons_list.append((preview_check, False, False, 0))
                 # }}}
+            else:
+                preview_check = None
 
-            # creates buttons box.
+            # creates buttons box to avoid attaching buttons directly.
+            # reduces buggery with grid attach widths.
             buttons = bszgw.AutoBox([
-                buttons_list,
+                [run_button, reset_button]
             ])
 
-            # grid builder. If ui_row/column are conflicting, increment row
+            # Creates the main grid using attach_all for collision detection.
             # Chains have separate columns since they're meant to be in-between
             # widgets connecting them.
-            # This or something similar would be a good addition to BSZGW
-            # as the grids were really nice to work with.
-            grid = Gtk.Grid()
-            grid.props.orientation = Gtk.Orientation.VERTICAL
-            # spacings. Changeable?
-            grid.props.column_spacing = 15
-            grid.props.row_spacing = 5
+            grid = bszgw.Grid()
+            GC = bszgw.GridChild
+            children = []
             for param in self.params:
-                # {{{
                 col = param.ui_column * 2
-                row = param.ui_row
-                if isinstance(param, ParamNumber):
-                    param.widget.scale.set_hexpand(True)
-                    # lets ParamNumber's sliders expand since it's not
-                    # implemented in bszgw
                 if isinstance(param, ParamNumberChain):
                     col += 1
-                # increment until row doesn't conflict. What can go wrong?
-                while True:
-                    if not grid.get_child_at(col, row):
-                        break
-                    row += 1
-                grid.attach(param.widget, col, row, 1, 1)
-                # }}}
-            # shove the buttons on the bottom of the first column
-            grid.add(buttons)
+                children.append(GC(param.widget, col_off=col,
+                                   row_off=param.ui_row))
+            grid.attach_all(*children, preview_check, buttons)
+
             # create the app window with the grid
             app = bszgw.App(
                 self.name, grid,
