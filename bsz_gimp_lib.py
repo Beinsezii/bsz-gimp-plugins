@@ -93,20 +93,24 @@ class Param(ABC):
         self.ui_column = ui_column
         self.ui_row = ui_row
         self.value = value
-        self.widget = None
-
-    @abstractmethod
-    def create_widget(self):
-        """Creates a ui widget and binds it to self.widget
-Therefore, you call `param.create_widget()` on the needed params,
-then later in the code you merely use `param.widget`"""
-        pass
+        self.__widget = None
 
     @abstractmethod
     def connect_preview(self, function, *args):
         """Connects the widget's value change signal to the function
 `pass` acceptable for widgets where it makes no sense"""
         pass
+
+    @abstractmethod
+    def create_widget(self):
+        """Returns a new widget for param.
+Mostly used internally for widget property."""
+        pass
+
+    def ui_reset(self):
+        """Assuming ui_value properties are set up correctly,
+there's no reason to implement this differently on a class-by-class basis."""
+        self.ui_value = self.value
 
     @property
     @abstractmethod
@@ -127,10 +131,13 @@ I intend to eventually use some gimp specific widgets when they're available"""
     def ui_value(self, new):
         pass
 
-    def ui_reset(self):
-        """Assuming ui_value properties above are set up correctly,
-there's no reason to implement this differently on a class-by-class basis."""
-        self.ui_value = self.value
+    @property
+    def widget(self):
+        """Readonly property containing the ui widget.
+Will create the widget on first read."""
+        if self.__widget is None:
+            self.__widget = self.create_widget()
+        return self.__widget
     # }}}
 
 
@@ -142,17 +149,16 @@ class ParamCombo(Param):
         super(ParamCombo, self).__init__(name, value, ui_column, ui_row)
         self.dictionary = dictionary
 
-    def create_widget(self):
-        if not self.widget:
-            self.widget = bszgw.ComboBox.new(
-                self.dictionary,
-                self.value,
-                tooltip=self.name,
-                show_ids=False,
-            )
-
     def connect_preview(self, function, *args):
         self.widget.connect("changed", function, *args)
+
+    def create_widget(self):
+        return bszgw.ComboBox.new(
+            self.dictionary,
+            self.value,
+            tooltip=self.name,
+            show_ids=False,
+        )
 
     @property
     def gproperty(self):
@@ -188,21 +194,20 @@ AKA a cool slider"""
         self.ui_step = ui_step
         self.ui_logarithmic = ui_logarithmic
 
-    def create_widget(self):
-        if not self.widget:
-            self.widget = bszgw.Adjuster.new(
-                label=self.name,
-                value=self.value,
-                min_value=self.min,
-                max_value=self.max,
-                step_increment=self.ui_step,
-                page_increment=self.ui_step,
-                decimals=0 if self.integer else 2,
-                logarithmic=self.ui_logarithmic
-            )
-
     def connect_preview(self, function, *args):
         self.widget.adjustment.connect("value-changed", function, *args)
+
+    def create_widget(self):
+        return bszgw.Adjuster.new(
+            label=self.name,
+            value=self.value,
+            min_value=self.min,
+            max_value=self.max,
+            step_increment=self.ui_step,
+            page_increment=self.ui_step,
+            decimals=0 if self.integer else 2,
+            logarithmic=self.ui_logarithmic
+        )
 
     @property
     def gproperty(self):
@@ -236,6 +241,18 @@ Currently only visually good for chaining across-columns."""
         self.param1 = param1
         self.param2 = param2
 
+    def create_widget(self):
+        self.param1.widget.adjustment.connect(
+            "value-changed", self.update, self.param1, self.param2)
+        self.param2.widget.adjustment.connect(
+            "value-changed", self.update, self.param2, self.param1)
+        return bszgw.CheckBox("Link", self.value)
+        # # Currently Gimp.ChainButton() is borked
+        # return Gimp.ChainButton(active=self.value)
+
+    def connect_preview(self, function, *args):
+        pass
+
     def update(self, widget, from_param, to_param):
         """copies values between params"""
         if self.widget.get_active():
@@ -244,21 +261,6 @@ Currently only visually good for chaining across-columns."""
             # to avoid sending more signals
             if to_param.ui_value != from_param.ui_value:
                 to_param.ui_value = from_param.ui_value
-
-    def create_widget(self):
-        if not self.widget:
-            # # Currently Gimp.ChainButton() is borked
-            # self.widget = Gimp.ChainButton(active=self.value)
-            self.widget = bszgw.CheckBox("Link", self.value)
-            self.param1.create_widget()
-            self.param2.create_widget()
-            self.param1.widget.adjustment.connect(
-                "value-changed", self.update, self.param1, self.param2)
-            self.param2.widget.adjustment.connect(
-                "value-changed", self.update, self.param2, self.param1)
-
-    def connect_preview(self, function, *args):
-        pass
 
     @property
     def gproperty(self):
@@ -423,9 +425,6 @@ and looks nicer I'll replace it ASAP."""
 
         # run_mode 'INTERACTIVE' means clicked in the menu
         if run_mode == Gimp.RunMode.INTERACTIVE:
-            for param in self.params:
-                param.create_widget()
-
             # puts all ui params into a list
             # ignors ui-specific params like chains
             def ui_vals():
