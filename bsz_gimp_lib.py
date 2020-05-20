@@ -411,6 +411,10 @@ and looks nicer I'll replace it ASAP."""
         # convert the ValueArray into a regular list
         args = [argsv.index(x) for x in range(argsv.length())]
 
+        # if no params and therefore no widgets always run non-interactive
+        if self.params == ():
+            run_mode = Gimp.RunMode.NONINTERACTIVE
+
         # run_mode 'NONINTERACTIVE' is if another plugin calls it through PDB
         if run_mode == Gimp.RunMode.NONINTERACTIVE:
             self.function(image, drawable, *args)
