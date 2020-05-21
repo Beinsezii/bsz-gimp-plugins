@@ -152,8 +152,7 @@ plugin = PlugIn(
     strength_low,
     softness_chain,
     radius_chain,
-    description="WIP",
-    alt_description="Alt Desc WIP",
+    description="Produces both a light and dark bloom, based on gimp/gegl's existing bloom.",
     images="RGB*, GRAY*",
     preview_function=dual_bloom_2_preview,
 )
