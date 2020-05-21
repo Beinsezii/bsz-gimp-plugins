@@ -276,6 +276,51 @@ Currently only visually good for chaining across-columns."""
     # }}}
 
 
+class ParamString(Param):
+    # {{{
+    """Creates a BSZGW TextBox"""
+    def __init__(self, name: str, value: str,
+                 ui_column: int = 0, ui_row: int = 0,
+                 ui_multiline: bool = False, ui_min_size: str = "300x100"):
+        super(ParamString, self).__init__(name, value, ui_column, ui_row)
+        self.ui_multiline = ui_multiline
+        self.ui_min_size = ui_min_size
+
+    def connect_preview(self, function, *args):
+        pass
+        # self.widget.connect("value-changed", function, *args)
+
+    def create_widget(self):
+        box = bszgw.TextBox(
+            label=self.name,
+            value=self.value,
+            multi_line=self.ui_multiline,
+            size=self.ui_min_size,
+        )
+        box.props.margin_left = 10
+        box.props.margin_right = 10
+        return box
+
+    @property
+    def gproperty(self):
+        return {self.name.lower().replace(' ', '-'):
+                (str,
+                 self.name,
+                 self.name,  # desc?
+                 self.value,
+                 GObject.ParamFlags.READWRITE)
+                }
+
+    @property
+    def ui_value(self):
+        return self.widget.value
+
+    @ui_value.setter
+    def ui_value(self, new):
+        self.widget.value = new
+    # }}}
+
+
 class PreviewThread(threading.Thread):
     # {{{
     """Runs `function` after self.request_preview has been called no more than
@@ -467,7 +512,8 @@ and looks nicer I'll replace it ASAP."""
                     for layer in self.preview_layers:
                         image.remove_layer(layer)
                     self.preview_layers = []
-                    image.undo_thaw()
+                    while not image.undo_is_enabled():
+                        image.undo_thaw()
                 # }}}
 
             # if preview function, get new preview layer[s] from

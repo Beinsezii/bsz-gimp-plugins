@@ -29,13 +29,13 @@ import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 # import bszgw
-from bsz_gimp_lib import PlugIn#, ParamString
+from bsz_gimp_lib import PlugIn, ParamString, PDB
 
 import numpy
 
 
 # Main function.
-def pixel_math(image, drawable, code="pixels[1::4] *= 1 - pixels[0::4] / 100", channels="CIE LCH(ab) alpha double"):
+def pixel_math(image, drawable, babl_format, code,):
     # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
@@ -50,14 +50,23 @@ def pixel_math(image, drawable, code="pixels[1::4] *= 1 - pixels[0::4] / 100", c
 
         rect = Gegl.Rectangle.new(x, y, width, height)
 
-        # get pixel bytes
-        array = bytearray(buff.get(rect, 1.0, channels,
-                          Gegl.AbyssPolicy.CLAMP))
+        try:
+            array = bytearray(buff.get(rect, 1.0, babl_format,
+                              Gegl.AbyssPolicy.CLAMP))
 
-        pixels = numpy.frombuffer(array)
-        exec(code, globals(), locals())
+            pixels = numpy.frombuffer(array)
+            try:
+                exec(code, globals(), locals())
+            except Exception as e:
+                PDB('gimp-message', str(e))
 
-        shadow.set(rect, channels, bytes(array))
+            shadow.set(rect, babl_format, bytes(array))
+
+        # seems if babl crashes it nukes the program out of the try/except
+        # will leaves this here for now to remind myself to find a better
+        # solution
+        except Exception as e:
+            PDB('gimp-message', str(e))
 
         # Flush shadow buffer and combine it with main drawable
         shadow.flush()
@@ -83,9 +92,14 @@ def pixel_math_preview(image, drawable, *args):
 plugin = PlugIn(
     "Pixel Math",  # name
     pixel_math,    # function
-    # ParamString(),
-    description="Reduces/increases chroma based on intensity.\n"
-    "Inspired by the 'Filmic' tonemapper in Blender.",
+    ParamString('BABL Format',
+                value="HSLA double"),
+    ParamString('Python Code',
+                value="pixels[2::4] = 1 - pixels[2::4]",
+                ui_multiline=True,
+                ui_min_size="400x100"),
+    description="Enter custom algorithms for pixel math.\n"
+    "Pixels stored in NumPy array 'pixels'.",
     images="RGB*",
     preview_function=pixel_math_preview,
 )
