@@ -97,7 +97,7 @@ plugin = PlugIn(
     ParamString('Python Code',
                 value="pixels[2::4] = 1 - pixels[2::4]",
                 ui_multiline=True,
-                ui_min_size="400x100"),
+                ui_min_width=400),
     description="Enter custom algorithms for pixel math.\n"
     "Pixels stored in NumPy array 'pixels'.",
     images="RGB*",

@@ -278,25 +278,29 @@ Currently only visually good for chaining across-columns."""
 
 class ParamString(Param):
     # {{{
-    """Creates a BSZGW TextBox"""
+    """Creates a BSZGW Entry for inputting text."""
     def __init__(self, name: str, value: str,
                  ui_column: int = 0, ui_row: int = 0,
-                 ui_multiline: bool = False, ui_min_size: str = "300x100"):
+                 ui_multiline: bool = False,
+                 ui_min_width: int = 300, ui_min_height: int = 100):
         super(ParamString, self).__init__(name, value, ui_column, ui_row)
         self.ui_multiline = ui_multiline
-        self.ui_min_size = ui_min_size
+        self.ui_min_width = ui_min_width
+        self.ui_min_height = ui_min_height
 
     def connect_preview(self, function, *args):
         pass
         # self.widget.connect("value-changed", function, *args)
 
     def create_widget(self):
-        box = bszgw.TextBox(
+        box = bszgw.Entry(
             label=self.name,
             value=self.value,
             multi_line=self.ui_multiline,
-            size=self.ui_min_size,
+            min_width=self.ui_min_width,
+            min_height=self.ui_min_height
         )
+        # else the cursor gets lost against the edge of the window
         box.props.margin_left = 10
         box.props.margin_right = 10
         return box
