@@ -61,7 +61,7 @@ Reduces/increases chroma based on intensity. Inspired by Blender's new 'Filmic' 
 
 ### Pixel Math
 Enter custom algorithms for pixel math. Pixels stored in NumPy array 'pixels'.
-<img width=400 src="./bsz-pixel-math/during.png" />
+<img width=300 src="./bsz-pixel-math/during.png" />
 
 ## Installation
 Either
