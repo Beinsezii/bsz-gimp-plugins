@@ -4,6 +4,8 @@ Currently at the "I *think* I understand this now" phase.
 
 Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Will be bundled with releases.
 
+Also needs NumPy for filmic-chroma and future pixel math plugins. Will look into bundling with Windows versions if GIMP doesn't already.
+
 Should work with windows. Can't really test since there's no 2.99 builds yet. Everything's either python standard library or PyGobject, and gimp should bundle those as it's necessary for thier own python scripts.
 
 ## Current Plugins
@@ -35,6 +37,25 @@ Produces both a light and a dark bloom based on thresholds, with as many config 
   <tr>
     <td>Before</td>
     <td>After</td>
+  </tr>
+</table>
+
+### Filmic Chroma
+Reduces/increases chroma based on intensity. Inspired by Blender's new 'Filmic' tonemapper.
+
+<img width=300 src="./bsz-filmic-chroma/during.png" />
+<table class="img-compare">
+  <tr>
+    <th>Before</th>
+    <th>After</th>
+  </tr>
+  <tr>
+    <td><img width=200 src="./bsz-filmic-chroma/before.png" alt="Before" /></td>
+    <td><img width=200 src="./bsz-filmic-chroma/after.png" alt="After" /></td>
+  </tr>
+  <tr>
+    <td><img height=250 src="./bsz-filmic-chroma/before2.png" alt="Before" /></td>
+    <td><img height=250 src="./bsz-filmic-chroma/after2.png" alt="After" /></td>
   </tr>
 </table>
 
