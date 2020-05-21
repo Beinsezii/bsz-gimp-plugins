@@ -98,7 +98,7 @@ plugin = PlugIn(
     filmic_chroma,    # function
     ParamNumber("Scale", 1, 0.1, 1, ui_step=0.1),
     ParamNumber("Offset", 0.25, 0, 1, ui_step=0.1),
-    description="Reduces chroma based on intensity.\n"
+    description="Reduces/increases chroma based on intensity.\n"
     "Inspired by the 'Filmic' tonemapper in Blender.",
     images="RGB*",
     preview_function=filmic_chroma_preview,
