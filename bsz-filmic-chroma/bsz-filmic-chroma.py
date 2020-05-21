@@ -29,20 +29,17 @@ import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 # import bszgw
-from bsz_gimp_lib import PlugIn, ParamNumber, ParamNumberChain
+from bsz_gimp_lib import PlugIn, ParamNumber
 
-import struct
-import time
+import numpy
 
 
 # Main function.
-def filmic_saturation(image, drawable):
+def filmic_chroma(image, drawable, scale, offset):
     # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
     if intersect:
-        t = time.perf_counter()
-
         # start Gegl
         Gegl.init(None)
         # fetch main buffer
@@ -53,37 +50,27 @@ def filmic_saturation(image, drawable):
 
         rect = Gegl.Rectangle.new(x, y, width, height)
 
-        pixels = buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
-                          Gegl.AbyssPolicy.CLAMP)
-        pixels_iter = (pixels[x:x + 32] for x in range(0, len(pixels), 32))
-        new_pixels = bytearray()
+        # get pixel bytes
+        pixels = bytearray(buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
+                           Gegl.AbyssPolicy.CLAMP))
 
-        for pixel in pixels_iter:
-            l, c, h, a = struct.unpack('dddd', pixel)
-            c = c - (l * c) / 100
-            new_pixels += struct.pack('dddd', l, c, h, a)
+        # scale base of 100. Since it's divided later, it's also divided here
+        # so effect decreases with lower vals
+        scale = 100 / scale
+        offset = 1 + offset
 
-        shadow.set(rect, "CIE LCH(ab) alpha double", bytes(new_pixels))
+        # interpret the bytearray as floats (doubles)
+        np_array = numpy.frombuffer(pixels, dtype=float)
+        # [::4] == for every 4 elements in the array do this
+        # [1::4] picks the 2nd, chroma in this case
+        # later, [::4] is iterating the array in the same 'steps',
+        # picking the 1st element, lightness in this case.
+        # *= modifies in-place. I guess it automatically transfers through
+        # frombuffer to directly modify pixels bytearray?
+        # tl;dr new to the numpy black magic, StackOverflow showed the way.
+        np_array[1::4] *= offset - np_array[0::4] / scale
 
-        # # create a new node tree/graph
-        # tree = Gegl.Node()
-
-        # # Input buffer node using main buffer
-        # Input = tree.create_child("gegl:buffer-source")
-        # Input.set_property("buffer", buff)
-
-        # Invert = tree.create_child("gegl:invert")
-
-        # # Output buffer node using temp buffer
-        # Output = tree.create_child("gegl:write-buffer")
-        # Output.set_property("buffer", shadow)
-
-        # Input.link(Invert)
-
-        # Invert.link(Output)
-
-        # # Run the node tree
-        # Output.process()
+        shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
 
         # Flush shadow buffer and combine it with main drawable
         shadow.flush()
@@ -92,35 +79,29 @@ def filmic_saturation(image, drawable):
         # Update everything.
         drawable.update(x, y, width, height)
         Gimp.displays_flush()
-
-        print(time.perf_counter() - t)
         # }}}
 
 
 # Preview function. Just runs the same thing on a copy
-def filmic_saturation_preview(image, drawable, *args):
+def filmic_chroma_preview(image, drawable, *args):
     # {{{
     preview_layer = drawable.copy()
     image.insert_layer(preview_layer, None, 0)
-    filmic_saturation(image, preview_layer, *args)
+    filmic_chroma(image, preview_layer, *args)
     return preview_layer
     # }}}
 
 
-# Parameters from bsz_gimp_lib
-# {{{
-
-# }}}
-
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
-    "Filmic Saturation",  # name
-    filmic_saturation,    # function
-    # ,     # *params
-    description="WIP",
-    alt_description="Alt Desc WIP",
+    "Filmic Chroma",  # name
+    filmic_chroma,    # function
+    ParamNumber("Scale", 1, 0.1, 1, ui_step=0.1),
+    ParamNumber("Offset", 0.25, 0, 1, ui_step=0.1),
+    description="Reduces chroma based on intensity.\n"
+    "Inspired by the 'Filmic' tonemapper in Blender.",
     images="RGB*",
-    # preview_function=dual_bloom_2_preview,
+    preview_function=filmic_chroma_preview,
 )
 
 # register the plugin's Procedure class with gimp
