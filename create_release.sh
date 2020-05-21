@@ -7,5 +7,6 @@ zip -q bsz-gimp-plugins_${date}.zip \
     bszgw.py \
     bsz-dualbloom/bsz-dualbloom.py \
     bsz-dualbloom2/bsz-dualbloom2.py \
+    bsz-filmic-chroma/bsz-filmic-chroma.py \
 
 git tag ${date}
