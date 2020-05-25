@@ -59,6 +59,21 @@ Reduces/increases chroma based on intensity. Inspired by Blender's new 'Filmic' 
   </tr>
 </table>
 
+### Lightgrain
+LCH Noise masked to Lightness
+
+<img width=300 src="./bsz-lightgrain/during.png" />
+<table class="img-compare">
+  <tr>
+    <th><img width=200 src="./bsz-lightgrain/before.png" alt="Before" /></th>
+    <th><img width=200 src="./bsz-lightgrain/after.png" alt="After" /></th>
+  </tr>
+  <tr>
+    <td>Before</td>
+    <td>After</td>
+  </tr>
+</table>
+
 ### Pixel Math
 Enter custom algorithms for pixel math. Pixels stored in NumPy array 'pixels'.
 
