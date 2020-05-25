@@ -141,6 +141,39 @@ Will create the widget on first read."""
     # }}}
 
 
+class ParamBool(Param):
+    # {{{
+    """Creates a BSZGW CheckButton for booleans"""
+    def __init__(self, name: str, value: bool,
+                 ui_column: int = 0, ui_row: int = 0):
+        super(ParamBool, self).__init__(name, value, ui_column, ui_row)
+
+    def connect_preview(self, function, *args):
+        self.widget.connect("clicked", function, *args)
+
+    def create_widget(self):
+        return bszgw.CheckButton(self.name, self.value)
+
+    @property
+    def gproperty(self):
+        return {self.name.lower().replace(' ', '-'):
+                (bool,
+                 self.name,
+                 self.name,  # desc?
+                 self.value,
+                 GObject.ParamFlags.READWRITE)
+                }
+
+    @property
+    def ui_value(self):
+        return self.widget.value
+
+    @ui_value.setter
+    def ui_value(self, new):
+        self.widget.value = new
+    # }}}
+
+
 class ParamCombo(Param):
     # {{{
     """Creates a BSZGW ComboBox from a dictionary"""
@@ -246,7 +279,7 @@ Currently only visually good for chaining across-columns."""
             "value-changed", self.update, self.param1, self.param2)
         self.param2.widget.adjustment.connect(
             "value-changed", self.update, self.param2, self.param1)
-        return bszgw.CheckBox("Link", self.value)
+        return bszgw.CheckButton("Link", self.value)
         # # Currently Gimp.ChainButton() is borked
         # return Gimp.ChainButton(active=self.value)
 
@@ -293,17 +326,13 @@ class ParamString(Param):
         # self.widget.connect("value-changed", function, *args)
 
     def create_widget(self):
-        box = bszgw.Entry(
+        return bszgw.Entry(
             label=self.name,
             value=self.value,
             multi_line=self.ui_multiline,
             min_width=self.ui_min_width,
             min_height=self.ui_min_height
         )
-        # else the cursor gets lost against the edge of the window
-        box.props.margin_left = 10
-        box.props.margin_right = 10
-        return box
 
     @property
     def gproperty(self):
@@ -510,6 +539,7 @@ and looks nicer I'll replace it ASAP."""
             self.preview_layers = []
 
             # if any preview layers, delete them and thaw
+            # TODO: hide base layers when preview is up
             def clear_preview(*args):
                 # {{{
                 if self.preview_layers:
@@ -543,7 +573,7 @@ and looks nicer I'll replace it ASAP."""
                 # {{{
                 preview_thread = PreviewThread(preview_fn)
                 preview_thread.start()
-                preview_check = bszgw.CheckBox("'Live' Preview", True)
+                preview_check = bszgw.CheckButton("'Live' Preview", True)
                 preview_check.connect("clicked", preview_fn)
                 for param in self.params:
                     param.connect_preview(preview_thread.request_preview)
@@ -570,6 +600,7 @@ and looks nicer I'll replace it ASAP."""
                 children.append(GC(param.widget, col_off=col,
                                    row_off=param.ui_row))
             grid.attach_all(*children, preview_check, buttons)
+            grid.props.margin = 10
 
             # create the app window with the grid
             app = bszgw.App(

@@ -100,7 +100,7 @@ plugin = PlugIn(
                 ui_min_width=400),
     description="Enter custom algorithms for pixel math.\n"
     "Pixels stored in NumPy array 'pixels'.",
-    images="RGB*",
+    images="RGB*, GRAY*",
     preview_function=pixel_math_preview,
 )
 
