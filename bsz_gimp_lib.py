@@ -84,14 +84,22 @@ GEGL_COMPOSITORS = {
 }  # }}}
 
 
-# TODO: add support for widget height/width using the new bszgw.Grid
 class Param(ABC):
     # {{{
     """Abstract class taken by PlugIn."""
-    def __init__(self, name: str, value, ui_column: int = 0, ui_row: int = 0):
+    def __init__(self, name: str, value,
+                 description: str = "",
+                 ui_column: int = 0, ui_row: int = 0,
+                 ui_width: int = 1, ui_height: int = 1):
         self.name = name
+        if not description:
+            self.description = name
+        else:
+            self.description = description
         self.ui_column = ui_column
         self.ui_row = ui_row
+        self.ui_width = ui_width
+        self.ui_height = ui_height
         self.value = value
         self.__widget = None
 
@@ -145,21 +153,27 @@ class ParamBool(Param):
     # {{{
     """Creates a BSZGW CheckButton for booleans"""
     def __init__(self, name: str, value: bool,
-                 ui_column: int = 0, ui_row: int = 0):
-        super(ParamBool, self).__init__(name, value, ui_column, ui_row)
+                 description: str = "",
+                 ui_column: int = 0, ui_row: int = 0,
+                 ui_width: int = 1, ui_height: int = 1):
+        super(ParamBool, self).__init__(name, value,
+                                        description,
+                                        ui_column, ui_row,
+                                        ui_width, ui_height)
 
     def connect_preview(self, function, *args):
         self.widget.connect("clicked", function, *args)
 
     def create_widget(self):
-        return bszgw.CheckButton(self.name, self.value)
+        return bszgw.CheckButton(self.name, self.value,
+                                 tooltip=self.description)
 
     @property
     def gproperty(self):
         return {self.name.lower().replace(' ', '-'):
                 (bool,
                  self.name,
-                 self.name,  # desc?
+                 self.description,
                  self.value,
                  GObject.ParamFlags.READWRITE)
                 }
@@ -178,8 +192,13 @@ class ParamCombo(Param):
     # {{{
     """Creates a BSZGW ComboBox from a dictionary"""
     def __init__(self, name: str, dictionary: dict, value,
-                 ui_column: int = 0, ui_row: int = 0):
-        super(ParamCombo, self).__init__(name, value, ui_column, ui_row)
+                 description: str = "",
+                 ui_column: int = 0, ui_row: int = 0,
+                 ui_width: int = 1, ui_height: int = 1):
+        super(ParamCombo, self).__init__(name, value,
+                                         description,
+                                         ui_column, ui_row,
+                                         ui_width, ui_height)
         self.dictionary = dictionary
 
     def connect_preview(self, function, *args):
@@ -189,7 +208,7 @@ class ParamCombo(Param):
         return bszgw.ComboBox.new(
             self.dictionary,
             self.value,
-            tooltip=self.name,
+            tooltip=self.description,
             show_ids=False,
         )
 
@@ -198,7 +217,7 @@ class ParamCombo(Param):
         return {self.name.lower().replace(' ', '-'):
                 (str,
                  self.name,
-                 self.name,  # desc?
+                 self.description,
                  self.value,
                  GObject.ParamFlags.READWRITE)
                 }
@@ -218,9 +237,14 @@ class ParamNumber(Param):
     """Creates a BSZGW Adjustment for numeric (float or int) parameters.
 AKA a cool slider"""
     def __init__(self, name: str, value: int, min, max, integer: bool = False,
+                 description: str = "",
                  ui_column: int = 0, ui_row: int = 0,
+                 ui_width: int = 1, ui_height: int = 1,
                  ui_step: int = 1, ui_logarithmic: bool = False):
-        super(ParamNumber, self).__init__(name, value, ui_column, ui_row)
+        super(ParamNumber, self).__init__(name, value,
+                                          description,
+                                          ui_column, ui_row,
+                                          ui_width, ui_height)
         self.min = min
         self.max = max
         self.integer = integer
@@ -234,6 +258,7 @@ AKA a cool slider"""
         return bszgw.Adjuster.new(
             label=self.name,
             value=self.value,
+            tooltip=self.description,
             min_value=self.min,
             max_value=self.max,
             step_increment=self.ui_step,
@@ -247,7 +272,7 @@ AKA a cool slider"""
         return {self.name.lower().replace(' ', '-'):
                 (int if self.integer else float,
                  self.name,
-                 self.name,  # desc?
+                 self.description,
                  self.min, self.max, self.value,
                  GObject.ParamFlags.READWRITE)
                 }
@@ -269,8 +294,13 @@ Note chain ui columns are *separate* from regular ui columns
 Currently only visually good for chaining across-columns."""
     def __init__(self, name: str, value: bool,
                  param1: ParamNumber, param2: ParamNumber,
-                 ui_column: int = 0, ui_row: int = 0):
-        super(ParamNumberChain, self).__init__(name, value, ui_column, ui_row)
+                 description: str = "",
+                 ui_column: int = 0, ui_row: int = 0,
+                 ui_width: int = 1, ui_height: int = 1):
+        super(ParamNumberChain, self).__init__(name, value,
+                                               description,
+                                               ui_column, ui_row,
+                                               ui_width, ui_height)
         self.param1 = param1
         self.param2 = param2
 
@@ -279,7 +309,8 @@ Currently only visually good for chaining across-columns."""
             "value-changed", self.update, self.param1, self.param2)
         self.param2.widget.adjustment.connect(
             "value-changed", self.update, self.param2, self.param1)
-        return bszgw.CheckButton("Link", self.value)
+        return bszgw.CheckButton("Link", self.value,
+                                 tooltip=self.description)
         # # Currently Gimp.ChainButton() is borked
         # return Gimp.ChainButton(active=self.value)
 
@@ -313,10 +344,15 @@ class ParamString(Param):
     # {{{
     """Creates a BSZGW Entry for inputting text."""
     def __init__(self, name: str, value: str,
+                 description: str = "",
                  ui_column: int = 0, ui_row: int = 0,
+                 ui_width: int = 1, ui_height: int = 1,
                  ui_multiline: bool = False,
                  ui_min_width: int = 300, ui_min_height: int = 100):
-        super(ParamString, self).__init__(name, value, ui_column, ui_row)
+        super(ParamString, self).__init__(name, value,
+                                          description,
+                                          ui_column, ui_row,
+                                          ui_width, ui_height)
         self.ui_multiline = ui_multiline
         self.ui_min_width = ui_min_width
         self.ui_min_height = ui_min_height
@@ -329,6 +365,7 @@ class ParamString(Param):
         return bszgw.Entry(
             label=self.name,
             value=self.value,
+            # tooltip=self.description,  # TODO not implemented
             multi_line=self.ui_multiline,
             min_width=self.ui_min_width,
             min_height=self.ui_min_height
@@ -597,8 +634,10 @@ and looks nicer I'll replace it ASAP."""
                 col = param.ui_column * 2
                 if isinstance(param, ParamNumberChain):
                     col += 1
-                children.append(GC(param.widget, col_off=col,
-                                   row_off=param.ui_row))
+                children.append(GC(param.widget,
+                                   col_off=col, row_off=param.ui_row,
+                                   width=param.ui_width,
+                                   height=param.ui_height))
             grid.attach_all(*children, preview_check, buttons)
             grid.props.margin = 10
 

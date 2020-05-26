@@ -38,6 +38,9 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
     if intersect:
+        size_upper = max(width, height) / 2
+        size_high = min(1500, (size_upper * size_high) / 100)
+        size_low = min(1500, (size_upper * size_low) / 100)
         # start Gegl
         Gegl.init(None)
         # fetch main buffer
@@ -128,24 +131,33 @@ def dual_bloom_preview(image, drawable, *args):
 # Parameters from bsz_gimp_lib
 # {{{
 thresh_high = ParamNumber("Threshold High", 0.80, 0, 1,
+                          description="Everything above this is bloom",
                           ui_step=0.1)
 thresh_low = ParamNumber("Threshold Low", 0.30, 0, 1,
+                         description="Everything below this is dark bloom",
                          ui_step=0.1, ui_column=1)
 
-size_high = ParamNumber("Blur Size High", 10, 0, 1500,
+blurdesc = "Blur size is the % of the longest selection side/2. \
+Capped internally at 1500, the maximum size Gaussian Blur supports."
+size_high = ParamNumber("Blur Size High", 2, 0, 100, description=blurdesc,
                         ui_logarithmic=True)
-size_low = ParamNumber("Blur Size Low", 10, 0, 1500,
+size_low = ParamNumber("Blur Size Low", 2, 0, 100, description=blurdesc,
                        ui_logarithmic=True, ui_column=1)
 size_chain = ParamNumberChain("Link Blurs", True, size_high, size_low,
                               ui_row=1)
 
-opacity_high = ParamNumber("Opacity High", 0.2, -10, 10)
+opacitydesc = "Opacity of bloom set after blurring, before final composition"
+opacity_high = ParamNumber("Opacity High", 0.2, -10, 10,
+                           description=opacitydesc)
 opacity_low = ParamNumber("Opacity Low", 0.1, -10, 10,
-                          ui_column=1)
+                          description=opacitydesc, ui_column=1)
 
-composite_high = ParamCombo("Composite High", GEGL_COMPOSITORS, "svg:overlay")
+compositedesc = "GEGL composition method for combining the bloom with the \
+original image. Should probably be left on default."
+composite_high = ParamCombo("Composite High", GEGL_COMPOSITORS, "svg:overlay",
+                            description=compositedesc)
 composite_low = ParamCombo("Composite Low", GEGL_COMPOSITORS, "svg:overlay",
-                           ui_column=1)
+                           description=compositedesc, ui_column=1)
 # }}}
 
 
@@ -163,7 +175,6 @@ plugin = PlugIn(
     composite_low,
     size_chain,
     description="Provides light and dark bloom using thresholds.",
-    alt_description="Provides light and dark bloom using thresholds.",
     images="RGB*, GRAY*",
     preview_function=dual_bloom_preview,
 )
