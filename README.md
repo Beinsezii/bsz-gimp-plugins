@@ -13,11 +13,11 @@ Should work with windows. Can't really test since there's no 2.99 builds yet. Ev
 ### Dual Bloom
 Provides light and dark bloom using thresholds. Based on my own custom bloom methods.
 
-<img src="./bsz-dualbloom/during.png" />
+<img width=50% src="./bsz-dualbloom/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=250 src="./bsz-dualbloom/before.png" alt="Before" /></th>
-    <th><img width=250 src="./bsz-dualbloom/after.png" alt="After" /></th>
+    <th><img width=50% src="./bsz-dualbloom/before.png" alt="Before" /></th>
+    <th><img width=50% src="./bsz-dualbloom/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -28,11 +28,11 @@ Provides light and dark bloom using thresholds. Based on my own custom bloom met
 ### Dual Bloom 2
 Produces both a light and dark bloom, based on gimp/gegl's existing bloom.
 
-<img src="./bsz-dualbloom2/during.png" />
+<img width=300 src="./bsz-dualbloom2/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=250 src="./bsz-dualbloom2/before.png" alt="Before" /></th>
-    <th><img width=250 src="./bsz-dualbloom2/after.png" alt="After" /></th>
+    <th><img width=200 src="./bsz-dualbloom2/before.png" alt="Before" /></th>
+    <th><img width=200 src="./bsz-dualbloom2/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -43,15 +43,15 @@ Produces both a light and dark bloom, based on gimp/gegl's existing bloom.
 ### Filmic Chroma
 Reduces/increases chroma based on intensity. Inspired by Blender's new 'Filmic' tonemapper.
 
-<img src="./bsz-filmic-chroma/during.png" />
+<img width=300 src="./bsz-filmic-chroma/during.png" />
 <table class="img-compare">
   <tr>
     <th>Before</th>
     <th>After</th>
   </tr>
   <tr>
-    <td><img width=250 src="./bsz-filmic-chroma/before.png" alt="Before" /></td>
-    <td><img width=250 src="./bsz-filmic-chroma/after.png" alt="After" /></td>
+    <td><img width=200 src="./bsz-filmic-chroma/before.png" alt="Before" /></td>
+    <td><img width=200 src="./bsz-filmic-chroma/after.png" alt="After" /></td>
   </tr>
   <tr>
     <td><img height=250 src="./bsz-filmic-chroma/before2.png" alt="Before" /></td>
@@ -62,11 +62,11 @@ Reduces/increases chroma based on intensity. Inspired by Blender's new 'Filmic' 
 ### Lightgrain
 LCH Noise masked to Lightness
 
-<img src="./bsz-lightgrain/during.png" />
+<img width=300 src="./bsz-lightgrain/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=250 src="./bsz-lightgrain/before.png" alt="Before" /></th>
-    <th><img width=250 src="./bsz-lightgrain/after.png" alt="After" /></th>
+    <th><img width=200 src="./bsz-lightgrain/before.png" alt="Before" /></th>
+    <th><img width=200 src="./bsz-lightgrain/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -77,7 +77,7 @@ LCH Noise masked to Lightness
 ### Pixel Math
 Enter custom Python algorithms for pixel math.
 
-<img src="./bsz-pixel-math/during.png" />
+<img width=300 src="./bsz-pixel-math/during.png" />
 
 ## Installation
 Either
