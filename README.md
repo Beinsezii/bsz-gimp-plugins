@@ -13,11 +13,11 @@ Should work with windows. Can't really test since there's no 2.99 builds yet. Ev
 ### Dual Bloom
 Provides light and dark bloom using thresholds. Based on my own custom bloom methods.
 
-<img width=300 src="./bsz-dualbloom/during.png" />
+<img width=400 src="./bsz-dualbloom/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=200 src="./bsz-dualbloom/before.png" alt="Before" /></th>
-    <th><img width=200 src="./bsz-dualbloom/after.png" alt="After" /></th>
+    <th><img width=250 src="./bsz-dualbloom/before.png" alt="Before" /></th>
+    <th><img width=250 src="./bsz-dualbloom/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -28,11 +28,11 @@ Provides light and dark bloom using thresholds. Based on my own custom bloom met
 ### Dual Bloom 2
 Produces both a light and dark bloom, based on gimp/gegl's existing bloom.
 
-<img width=300 src="./bsz-dualbloom2/during.png" />
+<img width=400 src="./bsz-dualbloom2/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=200 src="./bsz-dualbloom2/before.png" alt="Before" /></th>
-    <th><img width=200 src="./bsz-dualbloom2/after.png" alt="After" /></th>
+    <th><img width=250 src="./bsz-dualbloom2/before.png" alt="Before" /></th>
+    <th><img width=250 src="./bsz-dualbloom2/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -50,12 +50,12 @@ Reduces/increases chroma based on intensity. Inspired by Blender's new 'Filmic' 
     <th>After</th>
   </tr>
   <tr>
-    <td><img width=200 src="./bsz-filmic-chroma/before.png" alt="Before" /></td>
-    <td><img width=200 src="./bsz-filmic-chroma/after.png" alt="After" /></td>
+    <td><img width=250 src="./bsz-filmic-chroma/before.png" alt="Before" /></td>
+    <td><img width=250 src="./bsz-filmic-chroma/after.png" alt="After" /></td>
   </tr>
   <tr>
-    <td><img height=250 src="./bsz-filmic-chroma/before2.png" alt="Before" /></td>
-    <td><img height=250 src="./bsz-filmic-chroma/after2.png" alt="After" /></td>
+    <td><img height=300 src="./bsz-filmic-chroma/before2.png" alt="Before" /></td>
+    <td><img height=300 src="./bsz-filmic-chroma/after2.png" alt="After" /></td>
   </tr>
 </table>
 
@@ -65,8 +65,8 @@ LCH Noise masked to Lightness
 <img width=300 src="./bsz-lightgrain/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=200 src="./bsz-lightgrain/before.png" alt="Before" /></th>
-    <th><img width=200 src="./bsz-lightgrain/after.png" alt="After" /></th>
+    <th><img width=250 src="./bsz-lightgrain/before.png" alt="Before" /></th>
+    <th><img width=250 src="./bsz-lightgrain/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
