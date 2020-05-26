@@ -366,7 +366,7 @@ class ParamString(Param):
         return bszgw.Entry(
             label=self.name,
             value=self.value,
-            # tooltip=self.description,  # TODO not implemented
+            tooltip=self.description,
             multi_line=self.ui_multiline,
             min_width=self.ui_min_width,
             min_height=self.ui_min_height
