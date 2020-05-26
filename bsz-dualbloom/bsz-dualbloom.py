@@ -61,8 +61,6 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         # Filter nodes for high threshold. See gegl.org/operations
         Threshold_High = tree.create_child("gegl:threshold")
         Threshold_High.set_property("value", thresh_high)
-        CTA_High = tree.create_child("gegl:color-to-alpha")
-        CTA_High.set_property("color", Gegl.Color.new("black"))
         Blur_High = tree.create_child("gegl:gaussian-blur")
         Blur_High.set_property("std-dev-x", size_high)
         Blur_High.set_property("std-dev-y", size_high)
@@ -73,8 +71,7 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         # Filter nodes for low threshold
         Threshold_Low = tree.create_child("gegl:threshold")
         Threshold_Low.set_property("value", thresh_low)
-        CTA_Low = tree.create_child("gegl:color-to-alpha")
-        CTA_Low.set_property("color", Gegl.Color.new("white"))
+        Invert = tree.create_child("gegl:value-invert")
         Blur_Low = tree.create_child("gegl:gaussian-blur")
         Blur_Low.set_property("std-dev-x", size_low)
         Blur_Low.set_property("std-dev-y", size_low)
@@ -92,17 +89,18 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         Input.link(Comp_Low)
 
         # Link/connect rest of nodes
-        Threshold_Low.link(CTA_Low)
-        CTA_Low.link(Blur_Low)
-        Blur_Low.link(Opacity_Low)
+        Threshold_Low.link(Invert)
+        Threshold_Low.link(Opacity_Low)
         # .link(node) is shorthand for .connect_to("output", node, "input")
-        Opacity_Low.connect_to("output", Comp_Low, "aux")
+        Invert.connect_to("output", Opacity_Low, "aux")
+        Opacity_Low.link(Blur_Low)
+        Blur_Low.connect_to("output", Comp_Low, "aux")
         Comp_Low.link(Comp_High)
 
-        Threshold_High.link(CTA_High)
-        CTA_High.link(Blur_High)
-        Blur_High.link(Opacity_High)
-        Opacity_High.connect_to("output", Comp_High, "aux")
+        Threshold_High.link(Opacity_High)
+        Threshold_High.connect_to("output", Opacity_High, "aux")
+        Opacity_High.link(Blur_High)
+        Blur_High.connect_to("output", Comp_High, "aux")
         Comp_High.link(Output)
 
         # Run the node tree
@@ -146,7 +144,7 @@ size_low = ParamNumber("Blur Size Low", 2, 0, 100, blur_desc,
 size_chain = ParamNumberChain("Link Blurs", True, size_high, size_low,
                               ui_row=1)
 
-opacity_desc = "Opacity of bloom set after blurring, before final composition"
+opacity_desc = "Opacity of bloom before composition."
 opacity_high = ParamNumber("Opacity High", 0.2, -10, 10, opacity_desc)
 opacity_low = ParamNumber("Opacity Low", 0.1, -10, 10, opacity_desc,
                           ui_column=1)
