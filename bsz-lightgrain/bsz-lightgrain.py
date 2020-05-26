@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-Use these for reference on gegl operations and their properties/inputs/outputs.
+Gegl Operation references:
 http://www.gegl.org/operations/
 https://gitlab.gnome.org/GNOME/gegl/-/tree/master/operations
+
+If on Linux:
+$ gegl --list-all
+$ gegl --info "operation-name"
 
 Also build the .gir files using g-ir-doc-tool for additional insight.
 If the docs don't have a description on something like class methods,
 run python's help() on it to view it in the terminal.
-Requires having a debug term open in gimp obvs
 """
 
 # Uncomment as needed.
@@ -32,7 +35,7 @@ from bsz_gimp_lib import PlugIn, ParamNumber, ParamBool
 # Main function.
 def lightgrain(image, drawable, dulling, noise_l, noise_c, noise_h, invert):
     # {{{
-    # Fairly certain mask_intersect() is the current selection mask
+    # mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
     if intersect:
         # start Gegl
@@ -68,10 +71,12 @@ def lightgrain(image, drawable, dulling, noise_l, noise_c, noise_h, invert):
         Output = tree.create_child("gegl:write-buffer")
         Output.set_property("buffer", shadow)
 
+        # base image linked to node inputs
         Input.link(Noise)
         Input.link(Merge)
         Input.link(Component)
 
+        # Link/connect rest of nodes
         Noise.link(Opacity)
 
         # invert by default.
@@ -95,7 +100,6 @@ def lightgrain(image, drawable, dulling, noise_l, noise_c, noise_h, invert):
         # Update everything.
         drawable.update(x, y, width, height)
         Gimp.displays_flush()
-
         # }}}
 
 
@@ -113,10 +117,15 @@ def lightgrain_preview(image, drawable, *args):
 plugin = PlugIn(
     "Lightgrain",  # name
     lightgrain,    # function
-    ParamNumber("Dulling", 2, 1, 8, integer=True),
-    ParamNumber("Lightness Noise", 10, 0, 100),
-    ParamNumber("Chroma Noise", 5, 0, 100),
-    ParamNumber("Hue Noise", 0, 0, 180),
+    ParamNumber("Dulling", 2, 1, 8,
+                "A high value lowers the randomness of the noise",
+                integer=True),
+    ParamNumber("Lightness Noise", 10, 0, 100,
+                "How much the noise affects lightness"),
+    ParamNumber("Chroma Noise", 5, 0, 100,
+                "How much the noise affects chroma"),
+    ParamNumber("Hue Noise", 0, 0, 180,
+                "How much the noise affects hue"),
     ParamBool("Invert", False),
     description="LCH Noise masked to Lightness.",
     images="RGB*, GRAY*",

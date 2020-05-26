@@ -236,10 +236,11 @@ class ParamNumber(Param):
     # {{{
     """Creates a BSZGW Adjustment for numeric (float or int) parameters.
 AKA a cool slider"""
-    def __init__(self, name: str, value: int, min, max, integer: bool = False,
+    def __init__(self, name: str, value: int, min, max,
                  description: str = "",
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1,
+                 integer: bool = False,
                  ui_step: int = 1, ui_logarithmic: bool = False):
         super(ParamNumber, self).__init__(name, value,
                                           description,

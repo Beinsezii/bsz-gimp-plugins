@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-Use these for reference on gegl operations and their properties/inputs/outputs.
+Gegl Operation references:
 http://www.gegl.org/operations/
 https://gitlab.gnome.org/GNOME/gegl/-/tree/master/operations
+
+If on Linux:
+$ gegl --list-all
+$ gegl --info "operation-name"
 
 Also build the .gir files using g-ir-doc-tool for additional insight.
 If the docs don't have a description on something like class methods,
 run python's help() on it to view it in the terminal.
-Requires having a debug term open in gimp obvs
 """
 
 # Uncomment as needed.
@@ -20,15 +23,12 @@ gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
 gi.require_version('Gegl', '0.4')
 from gi.repository import Gegl
-# gi.require_version('Babl', '0.1')
-# from gi.repository import Babl
 # from gi.repository import GObject
 # from gi.repository import GLib
 # from gi.repository import Gio
 import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
-# import bszgw
 from bsz_gimp_lib import PlugIn, ParamString, PDB
 
 import numpy
@@ -48,25 +48,26 @@ def pixel_math(image, drawable, babl_format, code,):
         # fetch shadow aka "temp" buffer
         shadow = drawable.get_shadow_buffer()
 
+        # create working rectangle area using mask intersect.
         rect = Gegl.Rectangle.new(x, y, width, height)
 
         try:
             array = bytearray(buff.get(rect, 1.0, babl_format,
                               Gegl.AbyssPolicy.CLAMP))
-
-            pixels = numpy.frombuffer(array)
-            try:
-                exec(code, globals(), locals())
-            except Exception as e:
-                PDB('gimp-message', str(e))
-
-            shadow.set(rect, babl_format, bytes(array))
-
         # seems if babl crashes it nukes the program out of the try/except
         # will leaves this here for now to remind myself to find a better
         # solution
         except Exception as e:
             PDB('gimp-message', str(e))
+            return
+
+        pixels = numpy.frombuffer(array)
+        try:
+            exec(code, globals(), locals())
+        except Exception as e:
+            PDB('gimp-message', str(e))
+
+        shadow.set(rect, babl_format, bytes(array))
 
         # Flush shadow buffer and combine it with main drawable
         shadow.flush()
@@ -92,14 +93,15 @@ def pixel_math_preview(image, drawable, *args):
 plugin = PlugIn(
     "Pixel Math",  # name
     pixel_math,    # function
-    ParamString('BABL Format',
-                value="HSLA double"),
-    ParamString('Python Code',
-                value="pixels[2::4] = 1 - pixels[2::4]",
+    ParamString('Format', "HSLA double",
+                "BABL pixel format. See http://gegl.org/babl/Reference.html"),
+    ParamString('Code',
+                "pixels[2::4] = 1 - pixels[2::4]",
+                "Python Code to execute. "
+                "Pixels are stored in the NumPy array 'pixels'.",
                 ui_multiline=True,
                 ui_min_width=400),
-    description="Enter custom algorithms for pixel math.\n"
-    "Pixels stored in NumPy array 'pixels'.",
+    description="Enter custom Python algorithms for pixel math.",
     images="RGB*, GRAY*",
     preview_function=pixel_math_preview,
 )

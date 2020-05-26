@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-Use this for reference on gegl operations and their properties/inputs/outputs.
+Gegl Operation references:
 http://www.gegl.org/operations/
+https://gitlab.gnome.org/GNOME/gegl/-/tree/master/operations
+
+If on Linux:
+$ gegl --list-all
+$ gegl --info "operation-name"
 
 Also build the .gir files using g-ir-doc-tool for additional insight.
 If the docs don't have a description on something like class methods,
 run python's help() on it to view it in the terminal.
-Requires having a debug term open in gimp obvs
 """
 
 # Uncomment as needed.
@@ -25,8 +29,8 @@ from gi.repository import Gegl
 import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
-from bsz_gimp_lib import GEGL_COMPOSITORS, ParamNumber, ParamNumberChain, \
-    ParamCombo, PlugIn
+from bsz_gimp_lib import PlugIn, ParamNumber, ParamNumberChain, \
+    ParamCombo, GEGL_COMPOSITORS
 
 
 # Main function.
@@ -34,13 +38,13 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
                size_high, size_low, opacity_high, opacity_low,
                composite_high="gegl:overlay", composite_low="gegl:overlay"):
     # {{{
-
-    # Fairly certain mask_intersect() is the current selection mask
+    # mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
     if intersect:
         size_upper = max(width, height) / 2
         size_high = min(1500, (size_upper * size_high) / 100)
         size_low = min(1500, (size_upper * size_low) / 100)
+
         # start Gegl
         Gegl.init(None)
         # fetch main buffer
@@ -58,8 +62,7 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         Threshold_High = tree.create_child("gegl:threshold")
         Threshold_High.set_property("value", thresh_high)
         CTA_High = tree.create_child("gegl:color-to-alpha")
-        # hex was the only string I could get to work.
-        CTA_High.set_property("color", Gegl.Color.new("#000000"))
+        CTA_High.set_property("color", Gegl.Color.new("black"))
         Blur_High = tree.create_child("gegl:gaussian-blur")
         Blur_High.set_property("std-dev-x", size_high)
         Blur_High.set_property("std-dev-y", size_high)
@@ -71,7 +74,7 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         Threshold_Low = tree.create_child("gegl:threshold")
         Threshold_Low.set_property("value", thresh_low)
         CTA_Low = tree.create_child("gegl:color-to-alpha")
-        CTA_Low.set_property("color", Gegl.Color.new("#ffffff"))
+        CTA_Low.set_property("color", Gegl.Color.new("white"))
         Blur_Low = tree.create_child("gegl:gaussian-blur")
         Blur_Low.set_property("std-dev-x", size_low)
         Blur_Low.set_property("std-dev-y", size_low)
@@ -83,21 +86,19 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         Output = tree.create_child("gegl:write-buffer")
         Output.set_property("buffer", shadow)
 
-        # base image linked to the thresholds and Comp_Low
+        # base image linked to node inputs
         Input.link(Threshold_High)
         Input.link(Threshold_Low)
         Input.link(Comp_Low)
 
-        # connect the low nodes to each other and Comp_High
+        # Link/connect rest of nodes
         Threshold_Low.link(CTA_Low)
         CTA_Low.link(Blur_Low)
         Blur_Low.link(Opacity_Low)
-        # Seems like `.link(node)` is shorthand for
-        # `.connect_to("output", node, "input")`
+        # .link(node) is shorthand for .connect_to("output", node, "input")
         Opacity_Low.connect_to("output", Comp_Low, "aux")
         Comp_Low.link(Comp_High)
 
-        # connect the high nodes to each other and Output
         Threshold_High.link(CTA_High)
         CTA_High.link(Blur_High)
         Blur_High.link(Opacity_High)
@@ -114,7 +115,6 @@ def dual_bloom(self, drawable, thresh_high, thresh_low,
         # Update everything.
         drawable.update(x, y, width, height)
         Gimp.displays_flush()
-
         # }}}
 
 
@@ -137,27 +137,26 @@ thresh_low = ParamNumber("Threshold Low", 0.30, 0, 1,
                          description="Everything below this is dark bloom",
                          ui_step=0.1, ui_column=1)
 
-blurdesc = "Blur size is the % of the longest selection side/2. \
+blur_desc = "Blur size is the % of the longest selection side/2. \
 Capped internally at 1500, the maximum size Gaussian Blur supports."
-size_high = ParamNumber("Blur Size High", 2, 0, 100, description=blurdesc,
+size_high = ParamNumber("Blur Size High", 2, 0, 100, blur_desc,
                         ui_logarithmic=True)
-size_low = ParamNumber("Blur Size Low", 2, 0, 100, description=blurdesc,
+size_low = ParamNumber("Blur Size Low", 2, 0, 100, blur_desc,
                        ui_logarithmic=True, ui_column=1)
 size_chain = ParamNumberChain("Link Blurs", True, size_high, size_low,
                               ui_row=1)
 
-opacitydesc = "Opacity of bloom set after blurring, before final composition"
-opacity_high = ParamNumber("Opacity High", 0.2, -10, 10,
-                           description=opacitydesc)
-opacity_low = ParamNumber("Opacity Low", 0.1, -10, 10,
-                          description=opacitydesc, ui_column=1)
+opacity_desc = "Opacity of bloom set after blurring, before final composition"
+opacity_high = ParamNumber("Opacity High", 0.2, -10, 10, opacity_desc)
+opacity_low = ParamNumber("Opacity Low", 0.1, -10, 10, opacity_desc,
+                          ui_column=1)
 
-compositedesc = "GEGL composition method for combining the bloom with the \
+composite_desc = "GEGL composition method for combining the bloom with the \
 original image. Should probably be left on default."
 composite_high = ParamCombo("Composite High", GEGL_COMPOSITORS, "svg:overlay",
-                            description=compositedesc)
+                            composite_desc)
 composite_low = ParamCombo("Composite Low", GEGL_COMPOSITORS, "svg:overlay",
-                           description=compositedesc, ui_column=1)
+                           composite_desc, ui_column=1)
 # }}}
 
 
@@ -174,7 +173,8 @@ plugin = PlugIn(
     composite_high,
     composite_low,
     size_chain,
-    description="Provides light and dark bloom using thresholds.",
+    description="Provides light and dark bloom using thresholds. \
+Based on my own custom bloom methods.",
     images="RGB*, GRAY*",
     preview_function=dual_bloom_preview,
 )

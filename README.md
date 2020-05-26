@@ -9,15 +9,15 @@ Also needs NumPy for filmic-chroma and future pixel math plugins. Usually alread
 Should work with windows. Can't really test since there's no 2.99 builds yet. Everything's either python standard library or PyGobject, and gimp should bundle those as it's necessary for thier own python scripts.
 
 ## Current Plugins
-todo: get better example images.
-### Dual Bloom 2
-Produces both a light and dark bloom, based on gimp/gegl's existing bloom. Arguably prettier than the OG Dual Bloom.
 
-<img width=300 src="./bsz-dualbloom2/during.png" />
+### Dual Bloom
+Provides light and dark bloom using thresholds. Based on my own custom bloom methods.
+
+<img width=300 src="./bsz-dualbloom/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=200 src="./bsz-dualbloom2/before.png" alt="Before" /></th>
-    <th><img width=200 src="./bsz-dualbloom2/after.png" alt="After" /></th>
+    <th><img width=200 src="./bsz-dualbloom/before.png" alt="Before" /></th>
+    <th><img width=200 src="./bsz-dualbloom/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -25,14 +25,14 @@ Produces both a light and dark bloom, based on gimp/gegl's existing bloom. Argua
   </tr>
 </table>
 
-### Dual Bloom
-Produces both a light and a dark bloom based on thresholds, with as many config options as I can squeeze into GEGL. This preceeded Dual Bloom 2, and the results are similar but not exact.
+### Dual Bloom 2
+Produces both a light and dark bloom, based on gimp/gegl's existing bloom.
 
-<img width=300 src="./bsz-dualbloom/during.png" />
+<img width=300 src="./bsz-dualbloom2/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=200 src="./bsz-dualbloom/before.png" alt="Before" /></th>
-    <th><img width=200 src="./bsz-dualbloom/after.png" alt="After" /></th>
+    <th><img width=200 src="./bsz-dualbloom2/before.png" alt="Before" /></th>
+    <th><img width=200 src="./bsz-dualbloom2/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
@@ -75,7 +75,7 @@ LCH Noise masked to Lightness
 </table>
 
 ### Pixel Math
-Enter custom algorithms for pixel math. Pixels stored in NumPy array 'pixels'.
+Enter custom Python algorithms for pixel math.
 
 <img width=300 src="./bsz-pixel-math/during.png" />
 
@@ -91,12 +91,12 @@ Shared library for plugins. Notably contains a *complete plugin auto-builder*. S
    - Chains
    - Logarithmic scales courtesy of BSZGW
  - Extensible using the Param abstract class. Plugins can make their own widgets/parameters.
-   - Currently only bundles numeric scales and comobo boxes. More bundled Params to be added.
+   - Has built-in Param derivatives for most common data input fields.
  - Somewhat documented mostly in nice words.
-Check out bsz-dualbloom2.py for a decent example. This obviously can't cover every plugin use scenario, but I'd say covering 95% of use cases is good enough. 
+Check out bsz-dualbloom.py for a decent GEGL example, and bsz-filmic-chroma.py for a decent custom math example. This obviously can't cover every plugin use scenario, but I'd say covering 95% of use cases is good enough. 
 
 Other non-plugin-builder bits include:
  - Premade dictionary of Gegl compositors
    - Ripped from the gegl site's html.
    - Only includes operations that use pads input, aux, output.
- - PDB quick function. WIP.
+ - PDB quick function. WIP, only used for gimp-message atm.

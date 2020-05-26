@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-Use these for reference on gegl operations and their properties/inputs/outputs.
+Gegl Operation references:
 http://www.gegl.org/operations/
 https://gitlab.gnome.org/GNOME/gegl/-/tree/master/operations
+
+If on Linux:
+$ gegl --list-all
+$ gegl --info "operation-name"
 
 Also build the .gir files using g-ir-doc-tool for additional insight.
 If the docs don't have a description on something like class methods,
 run python's help() on it to view it in the terminal.
-Requires having a debug term open in gimp obvs
 """
 
 # Uncomment as needed.
@@ -26,7 +29,6 @@ from gi.repository import Gegl
 import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
-# import bszgw
 from bsz_gimp_lib import PlugIn, ParamNumber, ParamNumberChain
 
 
@@ -35,7 +37,7 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
                  softness_high, softness_low, radius_high, radius_low,
                  strength_high, strength_low):
     # {{{
-    # Fairly certain mask_intersect() is the current selection mask
+    # mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
     if intersect:
         # start Gegl
@@ -73,7 +75,7 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
         Output = tree.create_child("gegl:write-buffer")
         Output.set_property("buffer", shadow)
 
-        # base image linked to the thresholds and Comp_Low
+        # base image linked to node inputs
         Input.link(Bloom_High)
         Input.connect_to("output", Sub_High, "aux")
         Input.link(Invert_Low)
@@ -116,20 +118,25 @@ def dual_bloom_2_preview(image, drawable, *args):
 
 # Parameters from bsz_gimp_lib
 # {{{
-amount_high = ParamNumber("Amount High", 15, 0, 100)
-amount_low = ParamNumber("Amount Low", 35, 0, 100, ui_column=1)
+amount_desc = "Glow-area brightness threshold"
+amount_high = ParamNumber("Amount High", 15, 0, 100, amount_desc)
+amount_low = ParamNumber("Amount Low", 35, 0, 100, amount_desc, ui_column=1)
 
-softness_high = ParamNumber("Softness High", 25, 0, 100)
-softness_low = ParamNumber("Softness Low", 25, 0, 100, ui_column=1)
+softness_desc = "Glow-area edge softness"
+softness_high = ParamNumber("Softness High", 25, 0, 100, softness_desc)
+softness_low = ParamNumber("Softness Low", 25, 0, 100, softness_desc,
+                           ui_column=1)
 
-radius_high = ParamNumber("Radius High", 10, 0, 1500,
+radius_desc = "Glow radius"
+radius_high = ParamNumber("Radius High", 10, 0, 1500, radius_desc,
                           ui_logarithmic=True)
-radius_low = ParamNumber("Radius Low", 10, 0, 1500,
+radius_low = ParamNumber("Radius Low", 10, 0, 1500, radius_desc,
                          ui_logarithmic=True, ui_column=1)
 
-strength_high = ParamNumber("Strength High", 50, 0, 1000,
+strength_desc = "Glow strength"
+strength_high = ParamNumber("Strength High", 50, 0, 1000, strength_desc,
                             ui_logarithmic=True)
-strength_low = ParamNumber("Strength Low", 50, 0, 1000,
+strength_low = ParamNumber("Strength Low", 50, 0, 1000, strength_desc,
                            ui_logarithmic=True, ui_column=1)
 
 softness_chain = ParamNumberChain("Softness Chain", True,
@@ -152,7 +159,8 @@ plugin = PlugIn(
     strength_low,
     softness_chain,
     radius_chain,
-    description="Produces both a light and dark bloom, based on gimp/gegl's existing bloom.",
+    description="Produces both a light and dark bloom. \
+Based on gimp/gegl's existing bloom.",
     images="RGB*, GRAY*",
     preview_function=dual_bloom_2_preview,
 )
