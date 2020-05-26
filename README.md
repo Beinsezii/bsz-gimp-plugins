@@ -13,11 +13,11 @@ Should work with windows. Can't really test since there's no 2.99 builds yet. Ev
 ### Dual Bloom
 Provides light and dark bloom using thresholds. Based on my own custom bloom methods.
 
-<img width=50% src="./bsz-dualbloom/during.png" />
+<img width=300 src="./bsz-dualbloom/during.png" />
 <table class="img-compare">
   <tr>
-    <th><img width=50% src="./bsz-dualbloom/before.png" alt="Before" /></th>
-    <th><img width=50% src="./bsz-dualbloom/after.png" alt="After" /></th>
+    <th><img width=200 src="./bsz-dualbloom/before.png" alt="Before" /></th>
+    <th><img width=200 src="./bsz-dualbloom/after.png" alt="After" /></th>
   </tr>
   <tr>
     <td>Before</td>
