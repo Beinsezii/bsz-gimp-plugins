@@ -315,7 +315,7 @@ Currently only visually good for chaining across-columns."""
         return bszgw.CheckButton("Link", self.value,
                                  tooltip=self.description)
         # # Currently Gimp.ChainButton() is borked
-        # return Gimp.ChainButton(active=self.value)
+        # return GimpUi.ChainButton(active=self.value)
 
     def connect_preview(self, function, *args):
         pass
