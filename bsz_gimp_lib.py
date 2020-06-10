@@ -8,7 +8,9 @@ Use python's help() for prettier help info.
 import gi
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
-gi.require_version('Gegl', '0.4')
+gi.require_version('GimpUi', '3.0')
+from gi.repository import GimpUi
+# gi.require_version('Gegl', '0.4')
 # from gi.repository import Gegl
 from gi.repository import GObject
 from gi.repository import GLib
@@ -432,7 +434,7 @@ Check out one of my scripts that uses it and you'll instantly go
                  description: str, alt_description: str = None,
                  preview_function: callable = None,
                  procedure_name: str = None, images: str = "RGB*",
-                 path: str = "<Image>/Beinsezii/", icon=Gimp.ICON_GEGL,
+                 path: str = "<Image>/Beinsezii/", icon=GimpUi.ICON_GEGL,
                  authors: str = "Beinsezii", copyright: str = None,
                  date: str = "2020"):
         # {{{
