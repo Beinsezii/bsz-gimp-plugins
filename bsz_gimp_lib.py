@@ -8,8 +8,6 @@ Use python's help() for prettier help info.
 import gi
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
-gi.require_version('GimpUi', '3.0')
-from gi.repository import GimpUi
 # gi.require_version('Gegl', '0.4')
 # from gi.repository import Gegl
 from gi.repository import GObject
@@ -19,6 +17,8 @@ from abc import ABC, abstractmethod
 
 # UI imports. Can't figure out a good way to only import these
 # in INTERACTIVE mode while keeping ui stuff in the params.
+gi.require_version('GimpUi', '3.0')
+from gi.repository import GimpUi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk  # noqa: F401
 gi.require_version('Gdk', '3.0')
