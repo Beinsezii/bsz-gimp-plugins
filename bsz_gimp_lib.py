@@ -407,6 +407,7 @@ once in the last 0.5 seconds."""
         self.request = True
 
     def run(self):
+        """Thread's main loop. Not called directly, use thread.start()"""
         while self.active:
             time.sleep(0.1)
             if time.time() - self.time > 0.5 and self.request:
@@ -420,6 +421,7 @@ once in the last 0.5 seconds."""
 
     def stop(self, *args):
         self.active = False
+        self.join()
     # }}}
 
 
@@ -562,6 +564,7 @@ and looks nicer I'll replace it ASAP."""
             # maybe it should only destroy if there's no preview?
             def run_fn(widget):
                 # {{{
+                preview_thread.stop()
                 clear_preview()
                 image.undo_group_start()
                 self.function(image, drawable,
@@ -654,7 +657,6 @@ and looks nicer I'll replace it ASAP."""
             # clear preview on destroy
             def destroy_fn(*args):
                 preview_thread.stop()
-                preview_thread.join()
                 clear_preview()
             app.connect("destroy", destroy_fn)
 
