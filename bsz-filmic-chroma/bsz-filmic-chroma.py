@@ -29,13 +29,13 @@ from gi.repository import Gegl
 import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
-from bsz_gimp_lib import PlugIn, ParamNumber
+from bsz_gimp_lib import PlugIn, ParamNumber, ParamBool
 
 import numpy
 
 
 # Main function.
-def filmic_chroma(image, drawable, scale, offset):
+def filmic_chroma(image, drawable, scale, offset, invert):
     # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
@@ -69,7 +69,10 @@ def filmic_chroma(image, drawable, scale, offset):
         # *= modifies in-place. I guess it automatically transfers through
         # frombuffer to directly modify pixels bytearray?
         # tl;dr new to the numpy black magic, StackOverflow showed the way.
-        np_array[1::4] *= offset - np_array[0::4] / scale
+        if not invert:
+            np_array[1::4] *= offset - np_array[0::4] / scale
+        else:
+            np_array[1::4] *= offset - (100 - np_array[0::4]) / scale
 
         shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
 
@@ -101,6 +104,7 @@ plugin = PlugIn(
                 "How much the chroma decreases with lightness.",
                 ui_step=0.1),
     ParamNumber("Offset", 0.25, 0, 1, "Flat chroma boost.", ui_step=0.1),
+    ParamBool("Invert", False, "Invert lightness' effect on chroma."),
     description="Reduces/increases chroma based on intensity.\n"
     "Inspired by Blender's new 'Filmic' tonemapper.",
     images="RGB*",
