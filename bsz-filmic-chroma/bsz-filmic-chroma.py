@@ -31,7 +31,12 @@ import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 from bsz_gimp_lib import PlugIn, ParamNumber, ParamBool
 
-import numpy
+try:
+    import numpy
+    NUMPY = True
+except Exception:
+    import struct
+    NUMPY = False
 
 
 # Main function.
@@ -51,30 +56,48 @@ def filmic_chroma(image, drawable, scale, offset, invert):
         # create working rectangle area using mask intersect.
         rect = Gegl.Rectangle.new(x, y, width, height)
 
-        # get pixel bytes
-        pixels = bytearray(buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
-                           Gegl.AbyssPolicy.CLAMP))
-
         # scale base of 100. Since it's divided later, it's also divided here
         # so effect decreases with lower vals
         scale = 100 / scale
         offset = 1 + offset
 
-        # interpret the bytearray as floats (doubles)
-        np_array = numpy.frombuffer(pixels, dtype=float)
-        # [::4] == for every 4 elements in the array do this
-        # [1::4] picks the 2nd, chroma in this case
-        # later, [::4] is iterating the array in the same 'steps',
-        # picking the 1st element, lightness in this case.
-        # *= modifies in-place. I guess it automatically transfers through
-        # frombuffer to directly modify pixels bytearray?
-        # tl;dr new to the numpy black magic, StackOverflow showed the way.
-        if not invert:
-            np_array[1::4] *= offset - np_array[0::4] / scale
-        else:
-            np_array[1::4] *= offset - (100 - np_array[0::4]) / scale
+        if NUMPY:  # few times faster, but won't be included in the releases
+            pixels = bytearray(buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
+                               Gegl.AbyssPolicy.CLAMP))
 
-        shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
+            # interpret the bytearray as floats (doubles)
+            np_array = numpy.frombuffer(pixels, dtype=float)
+            # [::4] == for every 4 elements in the array do this
+            # [1::4] picks the 2nd, chroma in this case
+            # later, [::4] is iterating the array in the same 'steps',
+            # picking the 1st element, lightness in this case.
+            # *= modifies in-place. I guess it automatically transfers through
+            # frombuffer to directly modify pixels bytearray?
+            # tl;dr new to the numpy black magic, StackOverflow showed the way.
+            if not invert:
+                np_array[1::4] *= offset - np_array[0::4] / scale
+            else:
+                np_array[1::4] *= offset - (100 - np_array[0::4]) / scale
+
+            shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
+
+        else:
+            pixels = buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
+                              Gegl.AbyssPolicy.CLAMP)
+            # creates clusters of pixels for unpack. 32 = 8 bytes
+            pixels_iter = (pixels[x:x + 32] for x in range(0, len(pixels), 32))
+            new_pixels = bytearray()
+
+            for pixel in pixels_iter:
+                # convert 4 bytes to 4 doubles
+                l, c, h, a = struct.unpack('dddd', pixel)
+                if not invert:
+                    c *= offset - l / scale
+                else:
+                    c *= offset - (100 - l) / scale
+                new_pixels += struct.pack('dddd', l, c, h, a)
+
+            shadow.set(rect, "CIE LCH(ab) alpha double", bytes(new_pixels))
 
         # Flush shadow buffer and combine it with main drawable
         shadow.flush()
