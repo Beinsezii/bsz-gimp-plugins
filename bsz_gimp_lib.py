@@ -589,8 +589,8 @@ and looks nicer I'll replace it ASAP."""
                     for layer in self.preview_layers:
                         image.remove_layer(layer)
                     self.preview_layers = []
-                    while not image.undo_is_enabled():
-                        image.undo_thaw()
+                while not image.undo_is_enabled():
+                    image.undo_thaw()
                 # }}}
 
             # if preview function, get new preview layer[s] from
