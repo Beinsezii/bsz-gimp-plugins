@@ -612,10 +612,10 @@ and looks nicer I'll replace it ASAP."""
 
             # creates preview_check, starts the live preview thread,
             # and has the widgets connect to function
+            preview_thread = PreviewThread(preview_fn)
+            preview_thread.start()
             if self.preview_function is not None:
                 # {{{
-                preview_thread = PreviewThread(preview_fn)
-                preview_thread.start()
                 preview_check = bszgw.CheckButton("'Live' Preview", True)
                 preview_check.connect("clicked", preview_fn)
                 for param in self.params:
