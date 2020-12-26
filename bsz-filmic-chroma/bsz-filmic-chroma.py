@@ -31,12 +31,13 @@ import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 from bsz_gimp_lib import PlugIn, ParamNumber, ParamBool
 
+import time
 try:
-    import numpy
-    NUMPY = True
+    from libbsz_shared import filmic_chroma as FC
+    EXTERN = True
 except Exception:
     import struct
-    NUMPY = False
+    EXTERN = False
 
 
 # Main function.
@@ -61,27 +62,21 @@ def filmic_chroma(image, drawable, scale, offset, invert):
         scale = 100 / scale
         offset = 1 + offset
 
-        if NUMPY:  # few times faster, but won't be included in the releases
+        # many times faster, but needs the shared library. I currently only
+        # have Linux and Windows devs setup, so the backup will stay for now
+        if EXTERN:
+            print("EXTERN BENCHMARK ENGAGE")
+            now = time.perf_counter()  # TODO: optimize & remove bench
+
             pixels = bytearray(buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
                                Gegl.AbyssPolicy.CLAMP))
-
-            # interpret the bytearray as floats (doubles)
-            np_array = numpy.frombuffer(pixels, dtype=float)
-            # [::4] == for every 4 elements in the array do this
-            # [1::4] picks the 2nd, chroma in this case
-            # later, [::4] is iterating the array in the same 'steps',
-            # picking the 1st element, lightness in this case.
-            # *= modifies in-place. I guess it automatically transfers through
-            # frombuffer to directly modify pixels bytearray?
-            # tl;dr new to the numpy black magic, StackOverflow showed the way.
-            if not invert:
-                np_array[1::4] *= offset - np_array[0::4] / scale
-            else:
-                np_array[1::4] *= offset - (100 - np_array[0::4]) / scale
-
+            FC(scale, offset, invert, pixels)
             shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
 
+            print(time.perf_counter() - now)
+
         else:
+
             pixels = buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
                               Gegl.AbyssPolicy.CLAMP)
             # creates clusters of pixels for unpack. 32 = 8 bytes
