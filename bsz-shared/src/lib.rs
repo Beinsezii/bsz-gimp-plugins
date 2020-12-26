@@ -27,7 +27,7 @@ fn filmic_chroma(scale: f64, offset: f64, invert: bool, bytes: &PyByteArray) {
 
 #[pymodule]
 /// A Python module implemented in Rust.
-fn libbsz_shared(_py: Python, m: &PyModule) -> PyResult<()> {
+fn bsz_shared(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(filmic_chroma, m)?)?;
 
     Ok(())

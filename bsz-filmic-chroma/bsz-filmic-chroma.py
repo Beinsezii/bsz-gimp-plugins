@@ -33,7 +33,7 @@ from bsz_gimp_lib import PlugIn, ParamNumber, ParamBool
 
 import time
 try:
-    from libbsz_shared import filmic_chroma as FC
+    from bsz_shared import filmic_chroma as FC
     EXTERN = True
 except Exception:
     import struct
