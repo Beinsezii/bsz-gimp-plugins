@@ -164,11 +164,12 @@ class ParamBool(Param):
                                         ui_width, ui_height)
 
     def connect_preview(self, function, *args):
-        self.widget.connect("clicked", function, *args)
+        self.widget.connect_changed(function, *args)
 
     def create_widget(self):
-        return bszgw.CheckButton(self.name, self.value,
-                                 tooltip=self.description)
+        widget = bszgw.CheckButton(self.name, self.value)
+        widget.props.tooltip_text = self.description
+        return widget
 
     @property
     def gproperty(self):
@@ -204,15 +205,16 @@ class ParamCombo(Param):
         self.dictionary = dictionary
 
     def connect_preview(self, function, *args):
-        self.widget.connect("changed", function, *args)
+        self.widget.connect_changed(function, *args)
 
     def create_widget(self):
-        return bszgw.ComboBox.new(
+        widget = bszgw.ComboBox.new_dict(
             self.dictionary,
             self.value,
-            tooltip=self.description,
             show_ids=False,
         )
+        widget.props.tooltip_text = self.description
+        return widget
 
     @property
     def gproperty(self):
@@ -255,20 +257,21 @@ AKA a cool slider"""
         self.ui_logarithmic = ui_logarithmic
 
     def connect_preview(self, function, *args):
-        self.widget.adjustment.connect("value-changed", function, *args)
+        self.widget.connect_changed(function, *args)
 
     def create_widget(self):
-        return bszgw.Adjuster.new(
-            label=self.name,
+        widget = bszgw.SpinScale.new(
             value=self.value,
-            tooltip=self.description,
             min_value=self.min,
             max_value=self.max,
             step_increment=self.ui_step,
             page_increment=self.ui_step,
-            decimals=0 if self.integer else 2,
+            label=self.name,
+            digits=0 if self.integer else 2,
             logarithmic=self.ui_logarithmic
         )
+        widget.props.tooltip_text = self.description
+        return widget
 
     @property
     def gproperty(self):
@@ -312,8 +315,9 @@ Currently only visually good for chaining across-columns."""
             "value-changed", self.update, self.param1, self.param2)
         self.param2.widget.adjustment.connect(
             "value-changed", self.update, self.param2, self.param1)
-        return bszgw.CheckButton("Link", self.value,
-                                 tooltip=self.description)
+        widget = bszgw.CheckButton("Link", self.value)
+        widget.props.tooltip_text = self.description
+        return widget
         # # Currently Gimp.ChainButton() is borked
         # return GimpUi.ChainButton(active=self.value)
 
@@ -362,17 +366,18 @@ class ParamString(Param):
 
     def connect_preview(self, function, *args):
         pass
-        # self.widget.connect("value-changed", function, *args)
+        # self.widget.connect_changed(function, *args)
 
     def create_widget(self):
-        return bszgw.Entry(
-            label=self.name,
+        widget = bszgw.Entry(
             value=self.value,
-            tooltip=self.description,
+            label=self.name,
             multi_line=self.ui_multiline,
             min_width=self.ui_min_width,
             min_height=self.ui_min_height
         )
+        widget.props.tooltip_text = self.description
+        return widget
 
     @property
     def gproperty(self):
@@ -644,15 +649,13 @@ and looks nicer I'll replace it ASAP."""
                                    col_off=col, row_off=param.ui_row,
                                    width=param.ui_width,
                                    height=param.ui_height))
-            grid.attach_all(*children, preview_check, buttons)
+            grid.attach_all_down(*children, preview_check, buttons)
             grid.props.margin = 10
 
             # create the app window with the grid
-            app = bszgw.App(
-                self.name, grid,
-                # hints it as a pop-up instead of a full window.
-                hint=Gdk.WindowTypeHint.DIALOG,
-            )
+            app = bszgw.App(self.name, grid)
+            # hints it as a pop-up instead of a full window.
+            app.props.type_hint = Gdk.WindowTypeHint.DIALOG
 
             # clear preview on destroy
             def destroy_fn(*args):
