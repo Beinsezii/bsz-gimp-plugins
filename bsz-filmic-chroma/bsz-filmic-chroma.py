@@ -65,15 +65,10 @@ def filmic_chroma(image, drawable, scale, offset, invert):
         # many times faster, but needs the shared library. I currently only
         # have Linux and Windows devs setup, so the backup will stay for now
         if EXTERN:
-            print("EXTERN BENCHMARK ENGAGE")
-            now = time.perf_counter()  # TODO: optimize & remove bench
-
             pixels = bytearray(buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
                                Gegl.AbyssPolicy.CLAMP))
             FC(scale, offset, invert, pixels)
             shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
-
-            print(time.perf_counter() - now)
 
         else:
 
