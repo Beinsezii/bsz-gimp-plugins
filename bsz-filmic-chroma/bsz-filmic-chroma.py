@@ -31,13 +31,22 @@ import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 from bsz_gimp_lib import PlugIn, ParamNumber, ParamBool
 
-import time
 try:
-    from bsz_shared import filmic_chroma as FC
-    EXTERN = True
-except Exception:
+    import ctypes
+    from sys import platform
+    EXTENSIONS = {"win32": ".dll", "linux": ".so"}
+    FC = ctypes.CDLL(
+        os.path.dirname(os.path.realpath(__file__)) +
+        "/filmic_chroma" + EXTENSIONS.get(platform)
+    ).filmic_chroma
+    FC.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_bool,
+                   ctypes.c_char_p, ctypes.c_uint]
+    FFI = True
+except Exception as e:
+    print(f"{e}\n\nFailed to load dynamic library,\
+            falling back to native python implementation")
     import struct
-    EXTERN = False
+    FFI = False
 
 
 # Main function.
@@ -64,14 +73,13 @@ def filmic_chroma(image, drawable, scale, offset, invert):
 
         # many times faster, but needs the shared library. I currently only
         # have Linux and Windows devs setup, so the backup will stay for now
-        if EXTERN:
-            pixels = bytearray(buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
-                               Gegl.AbyssPolicy.CLAMP))
-            FC(scale, offset, invert, pixels)
-            shadow.set(rect, "CIE LCH(ab) alpha double", bytes(pixels))
+        if FFI:
+            pixels = buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
+                              Gegl.AbyssPolicy.CLAMP)
+            FC(scale, offset, False, pixels, len(pixels))
+            shadow.set(rect, "CIE LCH(ab) alpha double", pixels)
 
         else:
-
             pixels = buff.get(rect, 1.0, "CIE LCH(ab) alpha double",
                               Gegl.AbyssPolicy.CLAMP)
             # creates clusters of pixels for unpack. 32 = 8 bytes

@@ -2,15 +2,13 @@
 
 printf -v date '%(%Y-%m-%d)T'
 
-cd ./bsz-shared
-cargo build --release
-cd ..
-strip ./bsz_shared.so
+bsz-*/build.sh
 
 zip -q bsz-gimp-plugins_${date}.zip \
     bsz_gimp_lib.py \
     bszgw.py \
-    bsz_shared.so \
-    bsz-*/*.py
+    bsz-*/*.py \
+    bsz-*/*.dll \
+    bsz-*/*.so
 
 git tag ${date}

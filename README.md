@@ -4,8 +4,6 @@ Currently at the "I *think* I understand this now" phase.
 
 Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Will be bundled with releases.
 
-Also needs NumPy for filmic-chroma and future pixel math plugins. Usually already installed in Linux, will look into bundling with Windows versions if GIMP doesn't already.
-
 Should work with windows. Can't really test since there's no 2.99 builds yet. Everything's either python standard library or PyGobject, and gimp should bundle those as it's necessary for thier own python scripts.
 
 ## Current Plugins
