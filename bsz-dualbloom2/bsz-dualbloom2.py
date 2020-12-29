@@ -106,16 +106,6 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
         # }}}
 
 
-# Preview function. Just runs the same thing on a copy
-def dual_bloom_2_preview(image, drawable, *args):
-    # {{{
-    preview_layer = drawable.copy()
-    image.insert_layer(preview_layer, None, 0)
-    dual_bloom_2(image, preview_layer, *args)
-    return preview_layer
-    # }}}
-
-
 # Parameters from bsz_gimp_lib
 # {{{
 amount_desc = "Glow-area brightness threshold"
@@ -162,7 +152,6 @@ plugin = PlugIn(
     description="Produces both a light and dark bloom. \
 Based on gimp/gegl's existing bloom.",
     images="RGB*, GRAY*",
-    preview_function=dual_bloom_2_preview,
 )
 
 # register the plugin's Procedure class with gimp

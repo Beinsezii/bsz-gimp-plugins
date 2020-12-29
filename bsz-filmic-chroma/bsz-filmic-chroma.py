@@ -107,16 +107,6 @@ def filmic_chroma(image, drawable, scale, offset, invert):
         # }}}
 
 
-# Preview function. Just runs the same thing on a copy
-def filmic_chroma_preview(image, drawable, *args):
-    # {{{
-    preview_layer = drawable.copy()
-    image.insert_layer(preview_layer, None, 0)
-    filmic_chroma(image, preview_layer, *args)
-    return preview_layer
-    # }}}
-
-
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
     "Filmic Chroma",  # name
@@ -129,7 +119,6 @@ plugin = PlugIn(
     description="Reduces/increases chroma based on intensity.\n"
     "Inspired by Blender's new 'Filmic' tonemapper.",
     images="RGB*",
-    preview_function=filmic_chroma_preview,
 )
 
 # register the plugin's Procedure class with gimp

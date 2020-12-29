@@ -8,8 +8,8 @@ Use python's help() for prettier help info.
 import gi
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
-# gi.require_version('Gegl', '0.4')
-# from gi.repository import Gegl
+gi.require_version('Gegl', '0.4')
+from gi.repository import Gegl
 from gi.repository import GObject
 from gi.repository import GLib
 # from gi.repository import Gio
@@ -439,7 +439,7 @@ Check out one of my scripts that uses it and you'll instantly go
     # Get & save properties
     def __init__(self, name: str, function: callable, *params: Param,
                  description: str, alt_description: str = None,
-                 preview_function: callable = None,
+                 gegl_preview: bool = True,
                  procedure_name: str = None, images: str = "RGB*",
                  path: str = "<Image>/Beinsezii/", icon=GimpUi.ICON_GEGL,
                  authors: str = "Beinsezii", copyright: str = None,
@@ -528,7 +528,7 @@ and looks nicer I'll replace it ASAP."""
         self.name = name
         self.function = function
         self.params = params
-        self.preview_function = preview_function
+        self.gegl_preview = gegl_preview
         # }}}
 
     # I decided to name the function called by the PDB procedure 'run'
@@ -584,16 +584,33 @@ and looks nicer I'll replace it ASAP."""
                     param.ui_reset()
             reset_button = bszgw.Button("Reset", reset_fn)
 
-            self.preview_layers = []
+            Gegl.init(None)
+            self.buffer = drawable.get_buffer().dup()
+            self.has_preview = False
+            self.flush = False
 
             # if any preview layers, delete them and thaw
             # TODO: hide base layers when preview is up
             def clear_preview(*args):
                 # {{{
-                if self.preview_layers:
-                    for layer in self.preview_layers:
-                        image.remove_layer(layer)
-                    self.preview_layers = []
+                if self.has_preview:
+                    # self.drawable.buffer = self.buffer
+                    intersect, x, y, width, height = drawable.mask_intersect()
+                    if intersect:
+                        Gegl.init(None)
+                        tree = Gegl.Node()
+                        target = drawable.get_buffer()
+                        Input = tree.create_child("gegl:buffer-source")
+                        Input.set_property("buffer", self.buffer)
+                        Output = tree.create_child("gegl:write-buffer")
+                        Output.set_property("buffer", target)
+                        Input.link(Output)
+                        Output.process()
+                        if self.flush:
+                            target.flush()
+                        drawable.update(x, y, width, height)
+                        Gimp.displays_flush()
+                        self.has_preview = False
                 while not image.undo_is_enabled():
                     image.undo_thaw()
                 # }}}
@@ -602,26 +619,25 @@ and looks nicer I'll replace it ASAP."""
             # self.preview_function and add them to self.preview_layers
             def preview_fn(*args):
                 # {{{
-                if self.preview_function is not None:
+                if self.gegl_preview:
                     clear_preview()
                     if preview_check.value:
                         image.undo_freeze()
-                        result = self.preview_function(
-                            image, drawable,
-                            *ui_vals())
-                        if isinstance(result, Gimp.Layer):
-                            self.preview_layers.append(result)
-                        elif isinstance(result, list):
-                            self.preview_layers += result
+                        self.function(image, drawable, *ui_vals())
+                        self.has_preview = True
                 # }}}
 
             # creates preview_check, starts the live preview thread,
             # and has the widgets connect to function
             preview_thread = PreviewThread(preview_fn)
             preview_thread.start()
-            if self.preview_function is not None:
+            if self.gegl_preview:
                 # {{{
                 preview_check = bszgw.CheckButton("'Live' Preview", True)
+
+                def onclick(*args):
+                    self.flush = not preview_check.value
+                preview_check.connect("clicked", onclick)
                 preview_check.connect("clicked", preview_fn)
                 for param in self.params:
                     param.connect_preview(preview_thread.request_preview)
@@ -660,6 +676,7 @@ and looks nicer I'll replace it ASAP."""
             # clear preview on destroy
             def destroy_fn(*args):
                 preview_thread.stop()
+                self.flush = True
                 clear_preview()
             app.connect("destroy", destroy_fn)
 

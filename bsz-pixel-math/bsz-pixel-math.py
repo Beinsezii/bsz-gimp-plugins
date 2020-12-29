@@ -79,16 +79,6 @@ def pixel_math(image, drawable, babl_format, code,):
         # }}}
 
 
-# Preview function. Just runs the same thing on a copy
-def pixel_math_preview(image, drawable, *args):
-    # {{{
-    preview_layer = drawable.copy()
-    image.insert_layer(preview_layer, None, 0)
-    pixel_math(image, preview_layer, *args)
-    return preview_layer
-    # }}}
-
-
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
     "Pixel Math",  # name
@@ -103,7 +93,6 @@ plugin = PlugIn(
                 ui_min_width=400),
     description="Enter custom Python algorithms for pixel math.",
     images="RGB*, GRAY*",
-    preview_function=pixel_math_preview,
 )
 
 # register the plugin's Procedure class with gimp

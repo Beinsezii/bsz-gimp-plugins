@@ -103,16 +103,6 @@ def lightgrain(image, drawable, dulling, noise_l, noise_c, noise_h, invert):
         # }}}
 
 
-# Preview function. Just runs the same thing on a copy
-def lightgrain_preview(image, drawable, *args):
-    # {{{
-    preview_layer = drawable.copy()
-    image.insert_layer(preview_layer, None, 0)
-    lightgrain(image, preview_layer, *args)
-    return preview_layer
-    # }}}
-
-
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
     "Lightgrain",  # name
@@ -129,7 +119,6 @@ plugin = PlugIn(
     ParamBool("Invert", False),
     description="LCH Noise masked to Lightness.",
     images="RGB*, GRAY*",
-    preview_function=lightgrain_preview,
 )
 
 # register the plugin's Procedure class with gimp

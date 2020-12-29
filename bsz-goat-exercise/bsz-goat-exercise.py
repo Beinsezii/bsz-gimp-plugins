@@ -92,29 +92,6 @@ def goat_exercise_preview(image, drawable, *args):
     # }}}
 
 
-# Parameters from bsz_gimp_lib
-# {{{
-source_code = "Could not find source code."
-with open(os.path.realpath(__file__), mode='r', encoding='UTF-8') as f:
-    source_code = f.read()
-
-Source_Code_View = ParamString(
-    "Source Code",
-    source_code,
-    description="Source View. Not actually used in-script",
-    ui_multiline=True,
-    ui_min_height=900,
-    ui_min_width=900,
-)
-
-Brightness_Controller = ParamNumber(
-    "Brightness", 0, -1, 1,
-    description="Adjust the image's brightness after the inversion.",
-    ui_step=0.1,
-)
-# }}}
-
-
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
     "BSZ Goat Exercise",  # name
@@ -126,7 +103,6 @@ plugin = PlugIn(
     description="Exercise a goat BSZ style.",
     images="*",
     path="<Image>/Filters/Development/Goat exercises/",
-    preview_function=goat_exercise_preview,
 )
 
 # register the plugin's Procedure class with gimp
