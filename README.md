@@ -6,6 +6,11 @@ Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Wil
 
 Should work with windows. Can't really test since there's no 2.99 builds yet. Everything's either python standard library or PyGobject, and gimp should bundle those as it's necessary for thier own python scripts.
 
+## Installation
+Either
+ - Download the release and unpack it into your already existing plugins folder
+ - Or, for cleanliness, unpack the release to its own folder and add that folder as a plug-in directory in Gimp's folder settings
+
 ## Current Plugins
 
 ### Dual Bloom
@@ -77,10 +82,6 @@ Enter custom Python algorithms for pixel math.
 
 <img width=300 src="./bsz-pixel-math/during.png" />
 
-## Installation
-Either
- - Download the release and unpack it into your already existing plugins folder
- - Or, for cleanliness, unpack the release to its own folder and add that folder as a plug-in directory in Gimp's folder settings.
 
 ## bsz_gimp_lib
 Shared library for plugins. Notably contains a *complete plugin auto-builder*. Similar to the old python-fu, but (imo) significantly more customizable at a mild complexity cost. Features include
