@@ -18,8 +18,7 @@ pub extern "C" fn filmic_chroma(
         let c = match invert {
             false => c * (offset - l / scale),
             true => c * (offset - (100.0 - l) / scale)
-        };
-        let c = c.to_le_bytes();
+        }.to_le_bytes();
 
         for x in 0..8 {
             chunk[x+8] = c[x];
