@@ -85,7 +85,7 @@ Enter custom Python algorithms for pixel math.
 
 ## bsz_gimp_lib
 Shared library for plugins. Notably contains a *complete plugin auto-builder*. Similar to the old python-fu, but (imo) significantly more customizable at a mild complexity cost. Features include
- - Actual live previews using a preview layer and *doesn't pollute undo history*.
+ - Semi-live previews using gegl buffers.
  - UI that isn't just a bunch of widgets smashed into a column (but it can be if that's what you want)
    - Chains
    - Logarithmic scales courtesy of BSZGW
