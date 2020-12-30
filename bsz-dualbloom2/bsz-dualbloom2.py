@@ -109,8 +109,8 @@ def dual_bloom_2(image, drawable, threshold_high, threshold_low,
 # Parameters from bsz_gimp_lib
 # {{{
 threshold_desc = "Glow-area brightness threshold"
-threshold_high = ParamNumber("Threshold High", 15, 0, 100, threshold_desc)
-threshold_low = ParamNumber("Threshold Low", 35, 0, 100,
+threshold_high = ParamNumber("Threshold High", 80, 0, 100, threshold_desc)
+threshold_low = ParamNumber("Threshold Low", 80, 0, 100,
                             threshold_desc, ui_column=1)
 
 softness_desc = "Glow-area edge softness"
