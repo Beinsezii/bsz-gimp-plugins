@@ -1,15 +1,14 @@
 # bsz-gimp-plugins
 ### Plugins for GIMP 2.99+
-Currently at the "I *think* I understand this now" phase.
-
-Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Will be bundled with releases.
-
-Should work with windows. Can't really test since there's no 2.99 builds yet. Everything's either python standard library or PyGobject, and gimp should bundle those as it's necessary for thier own python scripts.
-
 ## Installation
 Either
  - Download the release and unpack it into your already existing plugins folder
  - Or, for cleanliness, unpack the release to its own folder and add that folder as a plug-in directory in Gimp's folder settings
+
+## Building
+Needs the bszgw.py file from https://github.com/Beinsezii/BSZGW at the root. Will be bundled with releases.
+
+Compiling any shared libraries needs rustc and the rustup toolchain for the target platform. Small build scripts provided for Linux.
 
 ## Current Plugins
 
@@ -92,7 +91,7 @@ Shared library for plugins. Notably contains a *complete plugin auto-builder*. S
  - Extensible using the Param abstract class. Plugins can make their own widgets/parameters.
    - Has built-in Param derivatives for most common data input fields.
  - Somewhat documented mostly in nice words.
-Check out bsz-dualbloom.py for a decent GEGL example, and bsz-filmic-chroma.py for a decent custom math example. This obviously can't cover every plugin use scenario, but I'd say covering 95% of use cases is good enough. 
+Check out bsz-dualbloom.py for a decent GEGL filter example, and bsz-filmic-chroma.py for a decent custom math/FFI example. This obviously can't cover every plugin use scenario, but I'd say covering 95% of use cases is good enough. 
 
 Other non-plugin-builder bits include:
  - Premade dictionary of Gegl compositors

@@ -33,7 +33,7 @@ from bsz_gimp_lib import PlugIn, ParamNumber, ParamNumberChain
 
 
 # Main function.
-def dual_bloom_2(image, drawable, amount_high, amount_low,
+def dual_bloom_2(image, drawable, threshold_high, threshold_low,
                  softness_high, softness_low, radius_high, radius_low,
                  strength_high, strength_low):
     # {{{
@@ -55,7 +55,7 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
 
         # Operations for the high bloom
         Bloom_High = tree.create_child("gegl:bloom")
-        Bloom_High.set_property("amount", amount_high)
+        Bloom_High.set_property("threshold", threshold_high)
         Bloom_High.set_property("softness", softness_high)
         Bloom_High.set_property("radius", radius_high)
         Bloom_High.set_property("strength", strength_high)
@@ -65,7 +65,7 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
         # Operations for the low bloom
         Invert_Low = tree.create_child("gegl:invert-gamma")
         Bloom_Low = tree.create_child("gegl:bloom")
-        Bloom_Low.set_property("amount", amount_low)
+        Bloom_Low.set_property("threshold", threshold_low)
         Bloom_Low.set_property("softness", softness_low)
         Bloom_Low.set_property("radius", radius_low)
         Bloom_Low.set_property("strength", strength_low)
@@ -108,9 +108,10 @@ def dual_bloom_2(image, drawable, amount_high, amount_low,
 
 # Parameters from bsz_gimp_lib
 # {{{
-amount_desc = "Glow-area brightness threshold"
-amount_high = ParamNumber("Amount High", 15, 0, 100, amount_desc)
-amount_low = ParamNumber("Amount Low", 35, 0, 100, amount_desc, ui_column=1)
+threshold_desc = "Glow-area brightness threshold"
+threshold_high = ParamNumber("Threshold High", 15, 0, 100, threshold_desc)
+threshold_low = ParamNumber("Threshold Low", 35, 0, 100,
+                            threshold_desc, ui_column=1)
 
 softness_desc = "Glow-area edge softness"
 softness_high = ParamNumber("Softness High", 25, 0, 100, softness_desc)
@@ -139,8 +140,8 @@ radius_chain = ParamNumberChain("Radius Chain", True,
 plugin = PlugIn(
     "Dual Bloom 2",  # name
     dual_bloom_2,    # function
-    amount_high,     # *params
-    amount_low,
+    threshold_high,     # *params
+    threshold_low,
     softness_high,
     softness_low,
     radius_high,
