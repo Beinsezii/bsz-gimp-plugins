@@ -105,7 +105,7 @@ plugin = PlugIn(
                 "Python Code to execute. "
                 "Pixels are stored as individual channels in list 'pixels'",
                 ui_multiline=True,
-                ui_min_width=600, ui_min_height=400),
+                ui_min_width=600, ui_min_height=200),
 
     description="Enter custom Python algorithms for pixel math.",
     images="RGB*, GRAY*",
