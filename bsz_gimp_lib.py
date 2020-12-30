@@ -676,7 +676,7 @@ and looks nicer I'll replace it ASAP."""
             buttons = bszgw.Grid()
             buttons.props.column_homogeneous = True
             if max_off > 0 and self.gegl_preview:
-                buttons.attach_all_right(preview_check, preview_button,
+                buttons.attach_all_right(preview_button, preview_check,
                                          reset_button, run_button)
                 if self.gegl_preview:
                     buttons = GC(buttons, col_off=max_off - 2, width=3)
