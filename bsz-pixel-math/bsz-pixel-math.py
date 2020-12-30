@@ -29,13 +29,21 @@ from gi.repository import Gegl
 import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
-from bsz_gimp_lib import PlugIn, ParamString, PDB
+from bsz_gimp_lib import PlugIn, ParamCombo, ParamString, PDB
 
-import numpy
+import struct
+
+
+FORMATS = {
+    "RGBA": "RGBA double",
+    "HSLA": "HSLA double",
+    "LABA": "CIE Lab alpha double",
+    "LCHA": "CIE LCH(ab) alpha double",
+}
 
 
 # Main function.
-def pixel_math(image, drawable, babl_format, code,):
+def pixel_math(image, drawable, babl_format, code):
     # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
@@ -52,8 +60,8 @@ def pixel_math(image, drawable, babl_format, code,):
         rect = Gegl.Rectangle.new(x, y, width, height)
 
         try:
-            array = bytearray(buff.get(rect, 1.0, babl_format,
-                              Gegl.AbyssPolicy.CLAMP))
+            pixels = buff.get(rect, 1.0, babl_format,
+                              Gegl.AbyssPolicy.CLAMP)
         # seems if babl crashes it nukes the program out of the try/except
         # will leaves this here for now to remind myself to find a better
         # solution
@@ -61,13 +69,15 @@ def pixel_math(image, drawable, babl_format, code,):
             PDB('gimp-message', str(e))
             return
 
-        pixels = numpy.frombuffer(array)
         try:
+            total = int(len(pixels) / 8)
+            pixels = list(struct.unpack('d' * total, pixels))
             exec(code, globals(), locals())
+            pixels = struct.pack('d' * total, *pixels)
         except Exception as e:
             PDB('gimp-message', str(e))
 
-        shadow.set(rect, babl_format, bytes(array))
+        shadow.set(rect, babl_format, bytes(pixels))
 
         # Flush shadow buffer and combine it with main drawable
         shadow.flush()
@@ -83,14 +93,20 @@ def pixel_math(image, drawable, babl_format, code,):
 plugin = PlugIn(
     "Pixel Math",  # name
     pixel_math,    # function
-    ParamString('Format', "HSLA double",
-                "BABL pixel format. See http://gegl.org/babl/Reference.html"),
-    ParamString('Code',
-                "pixels[2::4] = 1 - pixels[2::4]",
+    ParamCombo('Format', FORMATS, "HSLA double", "Pixel format"),
+
+    ParamString("Code",
+
+                "# operate in sets of 4 for all 4 channels\n"
+                "for x in range(0, len(pixels), 4):\n"
+                "    h, s, l, a = pixels[x:x+4]\n"
+                "    pixels[x:x+4] = [h, s, 1 - l, a]\n",
+
                 "Python Code to execute. "
-                "Pixels are stored in the NumPy array 'pixels'.",
+                "Pixels are stored as individual channels in list 'pixels'",
                 ui_multiline=True,
-                ui_min_width=400),
+                ui_min_width=600, ui_min_height=400),
+
     description="Enter custom Python algorithms for pixel math.",
     images="RGB*, GRAY*",
 )
