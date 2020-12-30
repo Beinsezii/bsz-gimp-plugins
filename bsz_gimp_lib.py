@@ -355,7 +355,8 @@ class ParamString(Param):
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1,
                  ui_multiline: bool = False,
-                 ui_min_width: int = 300, ui_min_height: int = 100):
+                 ui_min_width: int = 300, ui_min_height: int = 100,
+                 ui_update_preview: bool = False):
         super(ParamString, self).__init__(name, value,
                                           description,
                                           ui_column, ui_row,
@@ -363,10 +364,11 @@ class ParamString(Param):
         self.ui_multiline = ui_multiline
         self.ui_min_width = ui_min_width
         self.ui_min_height = ui_min_height
+        self.ui_update_preview = ui_update_preview
 
     def connect_preview(self, function, *args):
-        pass
-        # self.widget.connect_changed(function, *args)
+        if self.ui_update_preview:
+            self.widget.connect_changed(function, *args)
 
     def create_widget(self):
         widget = bszgw.Entry(
