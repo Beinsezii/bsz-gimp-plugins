@@ -635,7 +635,10 @@ and looks nicer I'll replace it ASAP."""
             preview_thread.start()
             if self.gegl_preview:
                 # {{{
-                preview_check = bszgw.CheckButton("'Live' Preview", True)
+                preview_button = bszgw.Button("Update", preview_fn)
+                preview_button.props.hexpand = True
+
+                preview_check = bszgw.CheckButton("Preview", True)
 
                 def onclick(*args):
                     self.flush = not preview_check.value
@@ -645,30 +648,43 @@ and looks nicer I'll replace it ASAP."""
                     param.connect_preview(preview_thread.request_preview)
                 # }}}
             else:
+                preview_button = None
                 preview_check = None
 
             # creates buttons box to avoid attaching buttons directly.
             # reduces buggery with grid attach widths.
-            buttons = bszgw.AutoBox([
-                [run_button, reset_button]
-            ])
 
             # Creates the main grid using attach_all for collision detection.
             # Chains have separate columns since they're meant to be in-between
             # widgets connecting them.
             grid = bszgw.Grid()
+            grid.props.margin = 10
+
             GC = bszgw.GridChild
             children = []
+            max_off = 0
             for param in self.params:
                 col = param.ui_column * 2
+                max_off = max(col, max_off)
                 if isinstance(param, ParamNumberChain):
                     col += 1
                 children.append(GC(param.widget,
                                    col_off=col, row_off=param.ui_row,
                                    width=param.ui_width,
                                    height=param.ui_height))
-            grid.attach_all_down(*children, preview_check, buttons)
-            grid.props.margin = 10
+
+            buttons = bszgw.Grid()
+            buttons.props.column_homogeneous = True
+            if max_off > 0 and self.gegl_preview:
+                buttons.attach_all_right(preview_check, preview_button,
+                                         reset_button, run_button)
+                if self.gegl_preview:
+                    buttons = GC(buttons, col_off=max_off - 2, width=3)
+            else:
+                buttons.attach_all_right(preview_button, preview_check)
+                buttons.attach_all_right(reset_button, run_button, row=1)
+
+            grid.attach_all_down(*children, buttons)
 
             # create the app window with the grid
             app = bszgw.App(self.name, grid)
