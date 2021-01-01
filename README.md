@@ -81,6 +81,11 @@ Enter custom Python algorithms for pixel math.
 
 <img width=300 src="./bsz-pixel-math/during.png" />
 
+### Pixel Math 2
+Enter basic operations to perform pixel math. More limited, but processes well over 20x faster than Pixel Math in the worst scenarios.
+
+<img width=300 src="./bsz-pixel-math-2/during.png" />
+
 
 ## bsz_gimp_lib
 Shared library for plugins. Notably contains a *complete plugin auto-builder*. Similar to the old python-fu, but (imo) significantly more customizable at a mild complexity cost. Features include
@@ -97,4 +102,4 @@ Other non-plugin-builder bits include:
  - Premade dictionary of Gegl compositors
    - Ripped from the gegl site's html.
    - Only includes operations that use pads input, aux, output.
- - PDB quick function. WIP, only used for gimp-message atm.
+ - PDB quick function. WIP, many datatypes not supported.
