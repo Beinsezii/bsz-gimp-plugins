@@ -37,11 +37,17 @@ def PDB(procedure: str, *args):
     for num, arg in enumerate(args):
         if isinstance(arg, str):
             gtype = GObject.TYPE_STRING
+        elif isinstance(arg, Gimp.RunMode):
+            gtype = Gimp.RunMode
+        elif isinstance(arg, Gimp.Image):
+            gtype = Gimp.Image
+        elif isinstance(arg, Gimp.Drawable):
+            gtype = Gimp.Drawable
         else:
             raise ValueError("PDB Type not supported")
 
         argsv.insert(num, GObject.Value(gtype, arg))
-    return Gimp.get_pdb().run_procedure(procedure, argsv)
+    return Gimp.get_pdb().run_procedure_array(procedure, argsv)
     # }}}
 
 
