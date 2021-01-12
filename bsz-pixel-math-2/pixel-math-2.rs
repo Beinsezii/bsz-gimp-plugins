@@ -1,5 +1,6 @@
-use std::convert::TryInto;
+#![feature(available_concurrency)]
 use std::os::raw;
+use std::sync::Arc;
 
 
 #[derive(Clone, Copy)]
@@ -105,43 +106,46 @@ fn parse_ops(ops: &str) -> Vec<Operation> {
 }
 
 
-#[no_mangle]
-pub extern "C" fn pixel_math_2(
-    code: *const raw::c_char,
-    pixels: *mut raw::c_char,
-    len: usize) {
+fn process_segment(ops: &Vec<Operation>, pixels: &[f64],
+                   lower: usize, upper: usize) -> Box<[f64]> {
 
-    let code = unsafe {
-        assert!(!code.is_null());
-        std::ffi::CStr::from_ptr(code).to_str().expect("Invalid code string")
-    };
-    let pixels = unsafe {
-        assert!(!pixels.is_null());
-        std::slice::from_raw_parts_mut(pixels.cast::<u8>(), len)
+    let len = upper - lower;
+    if len % 4 != 0 {
+        println!("Lower: {} Upper: {}", lower, upper);
+        panic!("uneven slice");
     };
 
-    let ops = parse_ops(code);
+    let mut new_pixels: Box<[f64]> = vec![0.0; len].into_boxed_slice();
+    new_pixels.copy_from_slice(&pixels[lower..upper]);
 
-    for chunk in pixels.chunks_exact_mut(32) {
-        let mut c: [f64; 4] = [
-            f64::from_le_bytes(chunk[0..8].try_into().expect("bytefail c1")),
-            f64::from_le_bytes(chunk[8..16].try_into().expect("bytefail c2")),
-            f64::from_le_bytes(chunk[16..24].try_into().expect("bytefail c3")),
-            f64::from_le_bytes(chunk[24..32].try_into().expect("bytefail c4")),
-        ];
-        let mut v: [f64; 9] = [0.0; 9];
+    let mut vars = 0;
+    for op in ops {
+        match op.value {
+            Obj::Var(i) => vars = std::cmp::max(vars+1, i),
+            _ => (),
+        }
+        match op.value {
+            Obj::Var(i) => vars = std::cmp::max(vars+1, i),
+            _ => (),
+        }
+    }
+
+    for x in (0..len).step_by(4) {
+        let mut v: Vec<f64> = vec![0.0; vars];
 
         for op in ops.iter() {
             let val: f64 = match op.value {
-                Obj::Chan(i) => c[i],
+                Obj::Chan(i) => new_pixels[x+i],
                 Obj::Var(i) => v[i],
                 Obj::Num(n) => n,
             };
+
             let tar: &mut f64 = match op.target {
-                Obj::Chan(i) => &mut c[i],
+                Obj::Chan(i) => &mut new_pixels[x+i],
                 Obj::Var(i) => &mut v[i],
                 Obj::Num(_) => panic!("This shouldn't be reachable"),
             };
+
             match op.operation {
                 Op::Add => *tar += val,
                 Op::Sub => *tar -= val,
@@ -150,14 +154,61 @@ pub extern "C" fn pixel_math_2(
                 Op::Set => *tar = val,
             };
         }
-
-        let c1b = c[0].to_le_bytes();
-        let c2b = c[1].to_le_bytes();
-        let c3b = c[2].to_le_bytes();
-        let c4b = c[3].to_le_bytes();
-        for x in 0..8 {chunk[x] = c1b[x]};
-        for x in 0..8 {chunk[x+8] = c2b[x]};
-        for x in 0..8 {chunk[x+16] = c3b[x]};
-        for x in 0..8 {chunk[x+24] = c4b[x]};
     };
+
+    new_pixels
+}
+
+
+#[no_mangle]
+pub extern "C" fn pixel_math_2(
+    code: *const raw::c_char,
+    pixels: *mut raw::c_char,
+    len: usize) {
+
+    let len = len/8;
+
+    let code = unsafe {
+        assert!(!code.is_null());
+        std::ffi::CStr::from_ptr(code).to_str().expect("Invalid code string")
+    };
+    let pixels = unsafe {
+        assert!(!pixels.is_null());
+        std::slice::from_raw_parts_mut(pixels.cast::<f64>(), len)
+    };
+
+    let ops = parse_ops(code);
+
+    let mut threads = Vec::new();
+
+    let count: usize = std::thread::available_concurrency().map(|n| n.get()).unwrap_or(1);
+    let step: usize = (len/4)/count*4;
+    let mut p_arc = Arc::new(pixels);
+    let o_arc = Arc::new(ops);
+
+    for i in (0..len).step_by(step) {
+        let upper = if len-i < step {
+            len
+        } else { i+step };
+        let orc = Arc::clone(&o_arc);
+        let prc = Arc::clone(&p_arc);
+        threads.push(std::thread::spawn(move || process_segment(&orc, &prc, i, upper)));
+    }
+
+    let mut batches: Vec<Box<[f64]>> = Vec::new();
+    for t in threads {
+        batches.push(t.join().expect("Thread fail"));
+    }
+
+    let mut b = 0;
+    for i in (0..len).step_by(step) {
+        let upper = if len-i < step {
+            len
+        } else { i+step };
+        match Arc::get_mut(&mut p_arc) {
+            Some(pix) => pix[i..upper].copy_from_slice(&batches[b]),
+            None => panic!("Arc failed to grab mutable instance of pixels"),
+        };
+        b += 1;
+    }
 }
