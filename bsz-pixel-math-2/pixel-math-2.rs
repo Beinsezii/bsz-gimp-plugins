@@ -10,6 +10,11 @@ enum Op {
     Mul,
     Div,
     Set,
+    Pow,
+    Sqr,
+    Min,
+    Max,
+    Log,
 }
 
 
@@ -29,10 +34,12 @@ struct Operation {
 }
 
 
-fn parse_ops(ops: &str) -> Vec<Operation> {
+fn parse_ops(mut ops: String, mut chs: String) -> Vec<Operation> {
+    ops.make_ascii_lowercase();
+    chs.make_ascii_lowercase();
     let mut line = 0;
     let mut result = Vec::<Operation>::new();
-    for op in ops.trim().to_ascii_lowercase().split('\n') {
+    for op in ops.trim().split('\n') {
         line += 1;
         let items = op.split_ascii_whitespace().collect::<Vec<&str>>();
         if items.len() != 3 {
@@ -56,18 +63,29 @@ fn parse_ops(ops: &str) -> Vec<Operation> {
                 "v7" => Obj::Var(6),
                 "v8" => Obj::Var(7),
                 "v9" => Obj::Var(8),
-                _ => {
-                    println!("Invalid target on operation line {}", line);
-                    continue
+                val => {
+                    match chs.find(val) {
+                        Some(n) => Obj::Chan(n),
+                        None => {
+                            println!("Invalid target on operation line {}", line);
+                            continue
+                        }
+                    }
                 },
             },
 
             operation: match items[1] {
-                "+=" | "+" => Op::Add,
-                "-=" | "-" => Op::Sub,
-                "*=" | "*" => Op::Mul,
-                "/=" | "/" => Op::Div,
-                "==" | "=" => Op::Set,
+                "+=" | "+" | "add" => Op::Add,
+                "-=" | "-" | "sub" => Op::Sub,
+                "*=" | "*" | "mul" => Op::Mul,
+                "/=" | "/" | "div" => Op::Div,
+                "==" | "=" | "set" => Op::Set,
+                "**" | "^" | "^=" | "pow" => Op::Pow,
+                "sqrt" | "sqr" => Op::Sqr,
+                "min" => Op::Min,
+                "max" => Op::Max,
+                "log" => Op::Log,
+
                 _ => {
                     println!("Invalid math operator on operation line {}", line);
                     continue
@@ -88,12 +106,17 @@ fn parse_ops(ops: &str) -> Vec<Operation> {
                 "v7" => Obj::Var(6),
                 "v8" => Obj::Var(7),
                 "v9" => Obj::Var(8),
-                s => {
-                    match s.parse::<f64>() {
-                        Ok(n) => Obj::Num(n),
-                        Err(_) => {
-                            println!("Invalid value on operation line {}", line);
-                            continue
+                val => {
+                    match chs.find(val) {
+                        Some(n) => Obj::Chan(n),
+                        None => {
+                            match val.parse::<f64>() {
+                                Ok(n) => Obj::Num(n),
+                                Err(_) => {   // yeah so it's a pyramid
+                                    println!("Invalid value on operation line {}", line);
+                                    continue
+                                }
+                            }
                         }
                     }
                 },
@@ -152,6 +175,11 @@ fn process_segment(ops: &Vec<Operation>, pixels: &[f64],
                 Op::Mul => *tar *= val,
                 Op::Div => *tar /= val,
                 Op::Set => *tar = val,
+                Op::Pow => *tar = tar.powf(val),
+                Op::Sqr => *tar = val.sqrt(),
+                Op::Min => *tar = tar.min(val),
+                Op::Max => *tar = tar.max(val),
+                Op::Log => *tar = tar.log(val),
             };
         }
     };
@@ -163,6 +191,7 @@ fn process_segment(ops: &Vec<Operation>, pixels: &[f64],
 #[no_mangle]
 pub extern "C" fn pixel_math_2(
     code: *const raw::c_char,
+    channels: *const raw::c_char,
     pixels: *mut raw::c_char,
     len: usize) {
 
@@ -170,14 +199,18 @@ pub extern "C" fn pixel_math_2(
 
     let code = unsafe {
         assert!(!code.is_null());
-        std::ffi::CStr::from_ptr(code).to_str().expect("Invalid code string")
+        std::ffi::CStr::from_ptr(code).to_str().expect("Invalid code string").to_string()
+    };
+    let channels = unsafe {
+        assert!(!channels.is_null());
+        std::ffi::CStr::from_ptr(channels).to_str().expect("Invalid channels string").to_string()
     };
     let pixels = unsafe {
         assert!(!pixels.is_null());
         std::slice::from_raw_parts_mut(pixels.cast::<f64>(), len)
     };
 
-    let ops = parse_ops(code);
+    let ops = parse_ops(code, channels);
 
     let mut threads = Vec::new();
 

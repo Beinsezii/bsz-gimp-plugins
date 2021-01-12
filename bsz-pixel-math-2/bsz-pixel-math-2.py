@@ -38,7 +38,7 @@ PM2 = ctypes.CDLL(
     os.path.dirname(os.path.realpath(__file__)) +
     "/pixel_math_2" + EXTENSIONS.get(platform)
 ).pixel_math_2
-PM2.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+PM2.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
 
 
 FORMATS = {
@@ -77,19 +77,10 @@ def pixel_math(image, drawable, babl_format, code):
         else:
             raise ValueError("Invalid/unsupported BABL format")
 
-        code = code.casefold()
-
-        for num, c in enumerate(channels):
-            code = code.replace(f"{c} ", f"c{num+1} ")
-            code = code.replace(f"{c}\n", f"c{num+1}\n")
-            # since everything is whitespace separated in rust
-            # you can just search for whitespace to avoid
-            # double-replacing 'c'
-
         pixels = buff.get(rect, 1.0, babl_format,
                           Gegl.AbyssPolicy.CLAMP)
 
-        PM2(code.encode('UTF-8'), pixels, len(pixels))
+        PM2(code.encode('UTF-8'), channels.encode('UTF-8'), pixels, len(pixels))
 
         shadow.set(rect, babl_format, bytes(pixels))
 
