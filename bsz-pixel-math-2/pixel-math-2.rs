@@ -15,6 +15,10 @@ enum Op {
     Min,
     Max,
     Log,
+    Abs,
+    Cil,
+    Flr,
+    Rnd,
 }
 
 
@@ -23,6 +27,8 @@ enum Obj {
     Chan(usize),
     Var(usize),
     Num(f64),
+    E,
+    Pi,
 }
 
 
@@ -54,7 +60,7 @@ fn parse_ops(mut ops: String, mut chs: String) -> Vec<Operation> {
                 "c2" => Obj::Chan(1),
                 "c3" => Obj::Chan(2),
                 "c4" => Obj::Chan(3),
-                "v1" => Obj::Var(0),
+                "v1" | "v" => Obj::Var(0),
                 "v2" => Obj::Var(1),
                 "v3" => Obj::Var(2),
                 "v4" => Obj::Var(3),
@@ -79,13 +85,16 @@ fn parse_ops(mut ops: String, mut chs: String) -> Vec<Operation> {
                 "-=" | "-" | "sub" => Op::Sub,
                 "*=" | "*" | "mul" => Op::Mul,
                 "/=" | "/" | "div" => Op::Div,
-                "==" | "=" | "set" => Op::Set,
+                "=" | "set" => Op::Set,
                 "**" | "^" | "^=" | "pow" => Op::Pow,
                 "sqrt" | "sqr" => Op::Sqr,
                 "min" => Op::Min,
                 "max" => Op::Max,
                 "log" => Op::Log,
-
+                "abs" => Op::Abs,
+                "ceil" | "cil" => Op::Cil,
+                "floor" | "flr" => Op::Flr,
+                "round" | "rnd" => Op::Rnd,
                 _ => {
                     println!("Invalid math operator on operation line {}", line);
                     continue
@@ -97,7 +106,7 @@ fn parse_ops(mut ops: String, mut chs: String) -> Vec<Operation> {
                 "c2" => Obj::Chan(1),
                 "c3" => Obj::Chan(2),
                 "c4" => Obj::Chan(3),
-                "v1" => Obj::Var(0),
+                "v1" | "v" => Obj::Var(0),
                 "v2" => Obj::Var(1),
                 "v3" => Obj::Var(2),
                 "v4" => Obj::Var(3),
@@ -106,6 +115,8 @@ fn parse_ops(mut ops: String, mut chs: String) -> Vec<Operation> {
                 "v7" => Obj::Var(6),
                 "v8" => Obj::Var(7),
                 "v9" => Obj::Var(8),
+                "e" => Obj::E,
+                "pi" => Obj::Pi,
                 val => {
                     match chs.find(val) {
                         Some(n) => Obj::Chan(n),
@@ -144,11 +155,11 @@ fn process_segment(ops: &Vec<Operation>, pixels: &[f64],
     let mut vars = 0;
     for op in ops {
         match op.value {
-            Obj::Var(i) => vars = std::cmp::max(vars+1, i),
+            Obj::Var(i) => vars = std::cmp::max(vars, i+1),
             _ => (),
         }
         match op.value {
-            Obj::Var(i) => vars = std::cmp::max(vars+1, i),
+            Obj::Var(i) => vars = std::cmp::max(vars, i+1),
             _ => (),
         }
     }
@@ -161,12 +172,14 @@ fn process_segment(ops: &Vec<Operation>, pixels: &[f64],
                 Obj::Chan(i) => new_pixels[x+i],
                 Obj::Var(i) => v[i],
                 Obj::Num(n) => n,
+                Obj::E => std::f64::consts::E,
+                Obj::Pi => std::f64::consts::PI,
             };
 
             let tar: &mut f64 = match op.target {
                 Obj::Chan(i) => &mut new_pixels[x+i],
                 Obj::Var(i) => &mut v[i],
-                Obj::Num(_) => panic!("This shouldn't be reachable"),
+                _ => panic!("This shouldn't be reachable"),
             };
 
             match op.operation {
@@ -180,6 +193,10 @@ fn process_segment(ops: &Vec<Operation>, pixels: &[f64],
                 Op::Min => *tar = tar.min(val),
                 Op::Max => *tar = tar.max(val),
                 Op::Log => *tar = tar.log(val),
+                Op::Abs => *tar = val.abs(),
+                Op::Cil => *tar = val.ceil(),
+                Op::Flr => *tar = val.floor(),
+                Op::Rnd => *tar = val.round(),
             };
         }
     };

@@ -101,35 +101,49 @@ plugin = PlugIn(
     ParamCombo('Format', FORMATS, "HSLA double", "Pixel format"),
 
     ParamString("Operations",
-                "v1 = L\n"
+                "v = L\n"
                 "L = 1\n"
-                "L - v1",
+                "L - v",
                 "See description for code documentation",
                 ui_multiline=True,
                 ui_min_width=600, ui_min_height=200),
 
     description="""\
 Pixel math. Code format is {channel} {operator} {value}
-So c1 + 0.5 will add 0.5 to the first channel.
+c1 + 0.5 will add 0.5 to the first channel
+c1 ** 2 will raise c1 to the power of 2
+c1 sqrt c1 will set c1 to the square root of itself
+
+Everythin is case-insensitive, and *has* to be space-separated.
 
 Available channels:
-c1, c2, c3, c4 (always alpha). These are mapped to RGBA, HSLA, etc.
+c1, c2, c3, c4. These are mapped to RGBA, HSLA, etc.
 
 You may also use the channel letters themselves, such as
 r, g, b, a
 
-Supported operators are
-= or ==  : set/assign
-+ or +=  : add
-- or -=  : subtract
-* or *=  : multiply
-/ or /=  : divide
+The following is a list of valid operator strings and what they translate to
+"+=" | "+" | "add" => Op::Add,
+"-=" | "-" | "sub" => Op::Sub,
+"*=" | "*" | "mul" => Op::Mul,
+"/=" | "/" | "div" => Op::Div,
+"=" | "set" => Op::Set,
+"**" | "^" | "^=" | "pow" => Op::Pow,
+"sqrt" | "sqr" => Op::Sqr,
+"min" => Op::Min,
+"max" => Op::Max,
+"log" => Op::Log,
+"abs" => Op::Abs,
+"ceil" | "cil" => Op::Cil,
+"floor" | "flr" => Op::Flr,
+"round" | "rnd" => Op::Rnd,
 
 In addition to channels, you can store temporary values in variables.
 Available variables:
 v1, v2, v3...v9
+Plain 'v' is equal to v1.
 """,
-    images="RGB*, GRAY*",
+    images="RGBA",
 )
 
 # register the plugin's Procedure class with gimp
