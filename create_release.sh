@@ -7,7 +7,7 @@ bsz-*/build.sh
 zip -q bsz-gimp-plugins_${date}.zip \
     bsz_gimp_lib.py \
     bszgw.py \
-    bsz-*/*.py \
+    bsz-*/bsz-*.py \
     bsz-*/*.dll \
     bsz-*/*.so
 
