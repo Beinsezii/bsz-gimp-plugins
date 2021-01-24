@@ -98,7 +98,7 @@ def pixel_math(image, drawable, babl_format, code):
 plugin = PlugIn(
     "Pixel Math 2",  # name
     pixel_math,    # function
-    ParamCombo('Format', FORMATS, "HSLA double", "Pixel format"),
+    ParamCombo('Format', FORMATS, "HSLA double", "Pixel format", ui_preview=False),
 
     ParamString("Operations",
                 "v = L\n"

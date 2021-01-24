@@ -96,7 +96,7 @@ class Param(ABC):
     # {{{
     """Abstract class taken by PlugIn."""
     def __init__(self, name: str, value,
-                 description: str = "",
+                 description: str = "", ui_preview: bool = True,
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1):
         self.name = name
@@ -104,6 +104,7 @@ class Param(ABC):
             self.description = name
         else:
             self.description = description
+        self.ui_preview = ui_preview
         self.ui_column = ui_column
         self.ui_row = ui_row
         self.ui_width = ui_width
@@ -111,15 +112,21 @@ class Param(ABC):
         self.value = value
         self.__widget = None
 
-    @abstractmethod
-    def connect_preview(self, function, *args):
+    def connect_preview(self, function: callable, *args):
         """Connects the widget's value change signal to the function
 `pass` acceptable for widgets where it makes no sense"""
-        pass
+        if self.ui_preview:
+            self.connect_changed(function, *args if args else ())
 
     @abstractmethod
     def create_widget(self):
         """Returns a new widget for param.
+Mostly used internally for widget property."""
+        pass
+
+    @abstractmethod
+    def connect_changed(self, function: callable, *args):
+        """Connects widget's appropriate value change signal to fn with args.
 Mostly used internally for widget property."""
         pass
 
@@ -161,15 +168,15 @@ class ParamBool(Param):
     # {{{
     """Creates a BSZGW CheckButton for booleans"""
     def __init__(self, name: str, value: bool,
-                 description: str = "",
+                 description: str = "", ui_preview: bool = True,
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1):
         super(ParamBool, self).__init__(name, value,
-                                        description,
+                                        description, ui_preview,
                                         ui_column, ui_row,
                                         ui_width, ui_height)
 
-    def connect_preview(self, function, *args):
+    def connect_changed(self, function, *args):
         self.widget.connect_changed(function, *args)
 
     def create_widget(self):
@@ -201,16 +208,16 @@ class ParamCombo(Param):
     # {{{
     """Creates a BSZGW ComboBox from a dictionary"""
     def __init__(self, name: str, dictionary: dict, value,
-                 description: str = "",
+                 description: str = "", ui_preview: bool = True,
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1):
         super(ParamCombo, self).__init__(name, value,
-                                         description,
+                                         description, ui_preview,
                                          ui_column, ui_row,
                                          ui_width, ui_height)
         self.dictionary = dictionary
 
-    def connect_preview(self, function, *args):
+    def connect_changed(self, function, *args):
         self.widget.connect_changed(function, *args)
 
     def create_widget(self):
@@ -247,13 +254,13 @@ class ParamNumber(Param):
     """Creates a BSZGW Adjustment for numeric (float or int) parameters.
 AKA a cool slider"""
     def __init__(self, name: str, value: int, min, max,
-                 description: str = "",
+                 description: str = "", ui_preview: bool = True,
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1,
                  integer: bool = False,
                  ui_step: int = 1, ui_logarithmic: bool = False):
         super(ParamNumber, self).__init__(name, value,
-                                          description,
+                                          description, ui_preview,
                                           ui_column, ui_row,
                                           ui_width, ui_height)
         self.min = min
@@ -262,7 +269,7 @@ AKA a cool slider"""
         self.ui_step = ui_step
         self.ui_logarithmic = ui_logarithmic
 
-    def connect_preview(self, function, *args):
+    def connect_changed(self, function, *args):
         self.widget.connect_changed(function, *args)
 
     def create_widget(self):
@@ -306,11 +313,11 @@ Note chain ui columns are *separate* from regular ui columns
 Currently only visually good for chaining across-columns."""
     def __init__(self, name: str, value: bool,
                  param1: ParamNumber, param2: ParamNumber,
-                 description: str = "",
+                 description: str = "", ui_preview: bool = False,
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1):
         super(ParamNumberChain, self).__init__(name, value,
-                                               description,
+                                               description, ui_preview,
                                                ui_column, ui_row,
                                                ui_width, ui_height)
         self.param1 = param1
@@ -327,7 +334,7 @@ Currently only visually good for chaining across-columns."""
         # # Currently Gimp.ChainButton() is borked
         # return GimpUi.ChainButton(active=self.value)
 
-    def connect_preview(self, function, *args):
+    def connect_changed(self, function, *args):
         pass
 
     def update(self, widget, from_param, to_param):
@@ -357,24 +364,21 @@ class ParamString(Param):
     # {{{
     """Creates a BSZGW Entry for inputting text."""
     def __init__(self, name: str, value: str,
-                 description: str = "",
+                 description: str = "", ui_preview: bool = False,
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1,
                  ui_multiline: bool = False,
-                 ui_min_width: int = 300, ui_min_height: int = 100,
-                 ui_update_preview: bool = False):
+                 ui_min_width: int = 300, ui_min_height: int = 100):
         super(ParamString, self).__init__(name, value,
-                                          description,
+                                          description, ui_preview,
                                           ui_column, ui_row,
                                           ui_width, ui_height)
         self.ui_multiline = ui_multiline
         self.ui_min_width = ui_min_width
         self.ui_min_height = ui_min_height
-        self.ui_update_preview = ui_update_preview
 
-    def connect_preview(self, function, *args):
-        if self.ui_update_preview:
-            self.widget.connect_changed(function, *args)
+    def connect_changed(self, function, *args):
+        self.widget.connect_changed(function, *args)
 
     def create_widget(self):
         widget = bszgw.Entry(
