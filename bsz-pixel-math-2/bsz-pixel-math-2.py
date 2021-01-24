@@ -44,6 +44,7 @@ PM2.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint
 FORMATS = {
     "RGBA": "RGBA double",
     "HSLA": "HSLA double",
+    "XYZA": "CIE XYZ alpha double",
     "LABA": "CIE Lab alpha double",
     "LCHA": "CIE LCH(ab) alpha double",
 }
@@ -70,6 +71,8 @@ def pixel_math(image, drawable, babl_format, code):
             channels = "rgba"
         elif babl_format == "HSLA double":
             channels = "hsla"
+        elif babl_format == "CIE XYZ alpha double":
+            channels = "xyza"
         elif babl_format == "CIE Lab alpha double":
             channels = "laba"
         elif babl_format == "CIE LCH(ab) alpha double":
