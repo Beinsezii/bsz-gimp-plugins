@@ -313,11 +313,11 @@ Note chain ui columns are *separate* from regular ui columns
 Currently only visually good for chaining across-columns."""
     def __init__(self, name: str, value: bool,
                  param1: ParamNumber, param2: ParamNumber,
-                 description: str = "", ui_preview: bool = False,
+                 description: str = "",
                  ui_column: int = 0, ui_row: int = 0,
                  ui_width: int = 1, ui_height: int = 1):
         super(ParamNumberChain, self).__init__(name, value,
-                                               description, ui_preview,
+                                               description, False,
                                                ui_column, ui_row,
                                                ui_width, ui_height)
         self.param1 = param1
