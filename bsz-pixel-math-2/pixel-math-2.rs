@@ -1,5 +1,6 @@
 #![feature(available_concurrency)]
 use std::os::raw;
+use std::sync::Arc;
 
 // structs {{{
 #[derive(Clone, Copy)]
@@ -219,7 +220,7 @@ pub extern "C" fn pixel_math_2(
         std::slice::from_raw_parts_mut(pixels.cast::<f64>(), len)
     };
 
-    let ops = parse_ops(code, channels);
+    let ops = Arc::new(parse_ops(code, channels));
 
     let mut threads = Vec::new();
 
