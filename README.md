@@ -84,7 +84,7 @@ Enter custom Python algorithms for pixel math.
 ### Pixel Math 2
 Enter basic operations to perform pixel math. More limited, but processes well over 20x faster than Pixel Math in the worst scenarios.
 
-<img width=300 src="./bsz-pixel-math-2/during.png" />
+<img width=500 src="./bsz-pixel-math-2/during.png" />
 
 Current features: 
  - individual channels in many formats
