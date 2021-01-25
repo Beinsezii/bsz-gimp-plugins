@@ -1,4 +1,3 @@
-#![feature(available_concurrency)]
 use std::os::raw;
 use std::sync::Arc;
 
@@ -195,7 +194,7 @@ fn process_segment(ops: &Vec<Operation>, pixels: &mut [f64]) {
 
 
 #[no_mangle]
-pub extern "C" fn pixel_math_2(
+pub extern "C" fn pixelbuster(
     // {{{
     code: *const raw::c_char,
     channels: *const raw::c_char,
@@ -221,7 +220,7 @@ pub extern "C" fn pixel_math_2(
 
     let mut threads = Vec::new();
 
-    let count: usize = std::thread::available_concurrency().map(|n| n.get()).unwrap_or(1);
+    let count: usize = num_cpus::get();
     let mut chunks: Vec<&mut[f64]> = pixels.chunks_mut((len/4)/count*4).collect();
 
     for _ in 0..chunks.len() {

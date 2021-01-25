@@ -4,11 +4,11 @@ import ctypes
 from sys import platform
 EXTENSIONS = {"win32": ".dll", "linux": ".so"}
 import os.path
-PM2 = ctypes.CDLL(
+pixelbuster = ctypes.CDLL(
     os.path.dirname(os.path.realpath(__file__)) +
-    "/pixel_math_2" + EXTENSIONS.get(platform)
-).pixel_math_2
-PM2.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    "/../pixelbuster" + EXTENSIONS.get(platform)
+).pixelbuster
+pixelbuster.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
 
 import struct
 import time
@@ -30,7 +30,7 @@ r + 1
 r - 5
 """.encode('UTF-8')
 now = time.perf_counter()
-PM2(code, "rgba".encode('UTF-8'), pixels, size)
+pixelbuster(code, "rgba".encode('UTF-8'), pixels, size)
 print(time.perf_counter() - now)
 
 # test most ops aka 'worst case'
@@ -50,7 +50,7 @@ r round r
 r = v
 """.encode('UTF-8')
 now = time.perf_counter()
-PM2(code, "rgba".encode('UTF-8'), pixels, size)
+pixelbuster(code, "rgba".encode('UTF-8'), pixels, size)
 print(time.perf_counter() - now)
 
 # filmic chroma impl aka 'simple real case'
@@ -64,5 +64,5 @@ v - v2
 c * v
 """.encode('UTF-8')
 now = time.perf_counter()
-PM2(code, "lcha".encode('UTF-8'), pixels, size)
+pixelbuster(code, "lcha".encode('UTF-8'), pixels, size)
 print(time.perf_counter() - now)

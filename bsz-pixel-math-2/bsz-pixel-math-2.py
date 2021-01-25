@@ -34,11 +34,11 @@ from bsz_gimp_lib import PlugIn, ParamCombo, ParamString
 import ctypes
 from sys import platform
 EXTENSIONS = {"win32": ".dll", "linux": ".so"}
-PM2 = ctypes.CDLL(
+pixelbuster = ctypes.CDLL(
     os.path.dirname(os.path.realpath(__file__)) +
-    "/pixel_math_2" + EXTENSIONS.get(platform)
-).pixel_math_2
-PM2.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    "/../pixelbuster" + EXTENSIONS.get(platform)
+).pixelbuster
+pixelbuster.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
 
 
 FORMATS = {
@@ -83,7 +83,7 @@ def pixel_math(image, drawable, babl_format, code):
         pixels = buff.get(rect, 1.0, babl_format,
                           Gegl.AbyssPolicy.CLAMP)
 
-        PM2(code.encode('UTF-8'), channels.encode('UTF-8'), pixels, len(pixels))
+        pixelbuster(code.encode('UTF-8'), channels.encode('UTF-8'), pixels, len(pixels))
 
         shadow.set(rect, babl_format, bytes(pixels))
 
