@@ -98,6 +98,10 @@ Current features:
    - "**" | "^" | "pow"
    - "=" | "set"
    - "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt", "ceil", "cos", "cosh", "floor", "log", "max", "min", "round", "sin", "sinh", "sqrt", "tan", "tanh"
+ - constants
+   - pi
+   - e
+   - 'rand' - random number between 0.0 and 1.0
 
 
 ## bsz_gimp_lib
