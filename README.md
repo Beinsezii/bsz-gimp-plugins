@@ -86,6 +86,19 @@ Enter basic operations to perform pixel math. More limited, but processes well o
 
 <img width=300 src="./bsz-pixel-math-2/during.png" />
 
+Current features: 
+ - individual channels in many formats
+ - 9 variables to use
+ - many math operators
+   - "+=" | "+" | "add"
+   - "-=" | "-" | "sub"
+   - "*=" | "*" | "mul"
+   - "/=" | "/" | "div"
+   - "%=" | "%" | "mod"
+   - "**" | "^" | "pow"
+   - "=" | "set"
+   - "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt", "ceil", "cos", "cosh", "floor", "log", "max", "min", "round", "sin", "sinh", "sqrt", "tan", "tanh"
+
 
 ## bsz_gimp_lib
 Shared library for plugins. Notably contains a *complete plugin auto-builder*. Similar to the old python-fu, but (imo) significantly more customizable at a mild complexity cost. Features include
