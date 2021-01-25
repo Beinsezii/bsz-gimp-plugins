@@ -26,6 +26,7 @@ enum Obj {
     Num(f64),
     E,
     Pi,
+    Rand,
 }
 
 
@@ -115,6 +116,7 @@ fn parse_ops(mut ops: String, mut chs: String) -> Vec<Operation> {
                 "v9" => Obj::Var(8),
                 "e" => Obj::E,
                 "pi" => Obj::Pi,
+                "rand" => Obj::Rand,
                 val => {
                     match chs.find(val) {
                         Some(n) => Obj::Chan(n),
@@ -164,6 +166,7 @@ fn process_segment(ops: &Vec<Operation>, pixels: &mut [f64]) {
                 Obj::Num(n) => n,
                 Obj::E => std::f64::consts::E,
                 Obj::Pi => std::f64::consts::PI,
+                Obj::Rand => rand::random::<f64>(),
             };
 
             let tar: &mut f64 = match op.target {

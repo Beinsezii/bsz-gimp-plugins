@@ -145,6 +145,12 @@ In addition to channels, you can store temporary values in variables.
 Available variables:
 v1, v2, v3...v9
 Plain 'v' is equal to v1.
+Using a variable before assigning it is undefined behavior.
+
+Finally, you have some constants:
+pi => pi
+e => euler's number
+rand => random value from 0.0 to 1.0
 """,
     images="RGBA",
 )
