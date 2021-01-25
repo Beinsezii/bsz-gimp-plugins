@@ -157,9 +157,10 @@ fn process_segment(ops: &Vec<Operation>, pixels: &mut [f64]) {
         }
     }
 
-    for pixel in pixels.chunks_mut(4) {
-        let mut v: Vec<f64> = vec![0.0; vars];
+    let mut v: Box<[f64]> = vec![0.0; vars].into_boxed_slice();
 
+    for pixel in pixels.chunks_mut(4) {
+        v.fill(0.0);
         for op in ops.iter() {
             let val: f64 = match op.value {
                 Obj::Chan(i) => pixel[i],
