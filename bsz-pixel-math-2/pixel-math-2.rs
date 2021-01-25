@@ -3,7 +3,6 @@ use std::os::raw;
 use std::sync::Arc;
 
 // structs {{{
-#[derive(Clone, Copy)]
 enum Op {
     Add,
     Sub,
@@ -22,7 +21,6 @@ enum Op {
 }
 
 
-#[derive(Clone, Copy)]
 enum Obj {
     Chan(usize),
     Var(usize),
@@ -32,7 +30,6 @@ enum Obj {
 }
 
 
-#[derive(Clone, Copy)]
 struct Operation {
     target: Obj,
     operation: Op,
