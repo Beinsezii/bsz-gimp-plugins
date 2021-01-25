@@ -109,7 +109,7 @@ plugin = PlugIn(
                 "L - v",
                 "See description for code documentation",
                 ui_multiline=True,
-                ui_min_width=600, ui_min_height=200),
+                ui_min_width=300, ui_min_height=300),
 
     description="""\
 Pixel math. Code format is {channel} {operator} {value}
@@ -165,8 +165,7 @@ Using a variable before assigning it is undefined behavior.
 Finally, you have some constants:
 pi => pi
 e => euler's number
-rand => random value from 0.0 to 1.0
-""",
+rand => random value from 0.0 to 1.0""",
     images="RGBA",
 )
 
