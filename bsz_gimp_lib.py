@@ -544,9 +544,22 @@ and looks nicer I'll replace it ASAP."""
         # }}}
 
     # I decided to name the function called by the PDB procedure 'run'
-    def run(self, procedure, run_mode, image, drawable, argsv, run_data):
+    def run(self, procedure, run_mode, image, n_drawables, drawables, args, run_data):
         # convert the ValueArray into a regular list
-        args = [argsv.index(x) for x in range(argsv.length())]
+        if n_drawables != 1:
+            error = GLib.Error.new_literal(
+                Gimp.PlugIn.error_quark(),
+                "Procedure '{}' only works with one drawable.".format(procedure.get_name()),
+                0
+            )
+            return procedure.new_return_values(
+                Gimp.PDBStatusType.CALLING_ERROR,
+                error
+            )
+        else:
+            drawable = drawables[0]
+
+        args = [args.index(x) for x in range(args.length())]
 
         # if no params and therefore no widgets always run non-interactive
         if self.params == ():
