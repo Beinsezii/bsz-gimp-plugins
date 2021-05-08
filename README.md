@@ -1,5 +1,5 @@
 # bsz-gimp-plugins
-### Plugins for GIMP 2.99+
+### Plugins for GIMP 2.99.6+
 ## Installation
 Either
  - Download the release and unpack it into your already existing plugins folder
