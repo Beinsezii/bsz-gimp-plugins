@@ -41,18 +41,8 @@ pixelbuster = ctypes.CDLL(
 ).pixelbuster_ffi
 pixelbuster.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint, ctypes.c_uint]
 
-
-FORMATS = {
-    "RGBA": "RGBA float",
-    "HSLA": "HSLA float",
-    "XYZA": "CIE XYZ alpha float",
-    "LABA": "CIE Lab alpha float",
-    "LCHA": "CIE LCH(ab) alpha float",
-}
-
-
 # Main function.
-def pixel_math(image, drawable, babl_format, code):
+def pixel_math(image, drawable, code):
     # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
@@ -68,25 +58,12 @@ def pixel_math(image, drawable, babl_format, code):
         # create working rectangle area using mask intersect.
         rect = Gegl.Rectangle.new(x, y, width, height)
 
-        if babl_format == "RGBA float":
-            channels = "rgba"
-        elif babl_format == "HSLA float":
-            channels = "hsla"
-        elif babl_format == "CIE XYZ alpha float":
-            channels = "xyza"
-        elif babl_format == "CIE Lab alpha float":
-            channels = "laba"
-        elif babl_format == "CIE LCH(ab) alpha float":
-            channels = "lcha"
-        else:
-            raise ValueError("Invalid/unsupported BABL format")
-
-        pixels = buff.get(rect, 1.0, babl_format,
+        pixels = buff.get(rect, 1.0, "RGBA float",
                           Gegl.AbyssPolicy.CLAMP)
 
-        pixelbuster(code.encode('UTF-8'), channels.encode('UTF-8'), pixels, width, len(pixels))
+        pixelbuster(code.encode('UTF-8'), "srgba".encode('UTF-8'), pixels, width, len(pixels))
 
-        shadow.set(rect, babl_format, bytes(pixels))
+        shadow.set(rect, "RGBA float", bytes(pixels))
 
         # Flush shadow buffer and combine it with main drawable
         shadow.flush()
@@ -102,8 +79,6 @@ def pixel_math(image, drawable, babl_format, code):
 plugin = PlugIn(
     "Pixel Math 2",  # name
     pixel_math,    # function
-    ParamCombo('Format', FORMATS, "RGBA float", "Pixel format", ui_preview=False),
-
     ParamString("Operations",
                 "g * r",
                 "See description for code documentation",
