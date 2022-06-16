@@ -2,6 +2,9 @@ __pycache__/
 *.dll
 *.so
 
+# now it's own git
+pixelbuster/
+
 # Stored in separate git project as it's a generic Gtk 3 library useful (for me) outside of GIMP
 # The plugins all import the bszgw.py in the git root, so all changes apply
 # Basically just drop the file from https://github.com/Beinsezii/BSZGW.git into the main folder and you're good

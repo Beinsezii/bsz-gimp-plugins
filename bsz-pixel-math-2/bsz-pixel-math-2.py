@@ -33,20 +33,21 @@ from bsz_gimp_lib import PlugIn, ParamCombo, ParamString
 
 import ctypes
 from sys import platform
-EXTENSIONS = {"win32": ".dll", "linux": ".so"}
+LIBRARY = {"win32": "pixelbuster.dll", "linux": "libpixelbuster.so"}
+import os.path
 pixelbuster = ctypes.CDLL(
     os.path.dirname(os.path.realpath(__file__)) +
-    "/../pixelbuster" + EXTENSIONS.get(platform)
-).pixelbuster
-pixelbuster.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint]
+    "/../" + LIBRARY.get(platform)
+).pixelbuster_ffi
+pixelbuster.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint, ctypes.c_uint]
 
 
 FORMATS = {
-    "RGBA": "RGBA double",
-    "HSLA": "HSLA double",
-    "XYZA": "CIE XYZ alpha double",
-    "LABA": "CIE Lab alpha double",
-    "LCHA": "CIE LCH(ab) alpha double",
+    "RGBA": "RGBA float",
+    "HSLA": "HSLA float",
+    "XYZA": "CIE XYZ alpha float",
+    "LABA": "CIE Lab alpha float",
+    "LCHA": "CIE LCH(ab) alpha float",
 }
 
 
@@ -67,15 +68,15 @@ def pixel_math(image, drawable, babl_format, code):
         # create working rectangle area using mask intersect.
         rect = Gegl.Rectangle.new(x, y, width, height)
 
-        if babl_format == "RGBA double":
+        if babl_format == "RGBA float":
             channels = "rgba"
-        elif babl_format == "HSLA double":
+        elif babl_format == "HSLA float":
             channels = "hsla"
-        elif babl_format == "CIE XYZ alpha double":
+        elif babl_format == "CIE XYZ alpha float":
             channels = "xyza"
-        elif babl_format == "CIE Lab alpha double":
+        elif babl_format == "CIE Lab alpha float":
             channels = "laba"
-        elif babl_format == "CIE LCH(ab) alpha double":
+        elif babl_format == "CIE LCH(ab) alpha float":
             channels = "lcha"
         else:
             raise ValueError("Invalid/unsupported BABL format")
@@ -83,7 +84,7 @@ def pixel_math(image, drawable, babl_format, code):
         pixels = buff.get(rect, 1.0, babl_format,
                           Gegl.AbyssPolicy.CLAMP)
 
-        pixelbuster(code.encode('UTF-8'), channels.encode('UTF-8'), pixels, len(pixels))
+        pixelbuster(code.encode('UTF-8'), channels.encode('UTF-8'), pixels, width, len(pixels))
 
         shadow.set(rect, babl_format, bytes(pixels))
 
@@ -101,12 +102,10 @@ def pixel_math(image, drawable, babl_format, code):
 plugin = PlugIn(
     "Pixel Math 2",  # name
     pixel_math,    # function
-    ParamCombo('Format', FORMATS, "HSLA double", "Pixel format", ui_preview=False),
+    ParamCombo('Format', FORMATS, "RGBA float", "Pixel format", ui_preview=False),
 
     ParamString("Operations",
-                "v = L\n"
-                "L = 1\n"
-                "L - v",
+                "g * r",
                 "See description for code documentation",
                 ui_multiline=True,
                 ui_min_width=300, ui_min_height=300),
