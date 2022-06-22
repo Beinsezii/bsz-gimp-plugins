@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """
 Gegl Operation references:
 http://www.gegl.org/operations/
@@ -19,8 +18,10 @@ run python's help() on it to view it in the terminal.
 # I don't actually know if it's faster to not import some of the gi repo stuff
 # since it probably gets imported later anyway ...right?
 import gi
+
 gi.require_version('Gimp', '3.0')
 from gi.repository import Gimp
+
 gi.require_version('Gegl', '0.4')
 from gi.repository import Gegl
 # from gi.repository import GObject
@@ -28,18 +29,28 @@ from gi.repository import Gegl
 # from gi.repository import Gio
 import sys
 import os.path
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + '/../')
 from bsz_gimp_lib import PlugIn, ParamCombo, ParamString
 
 import ctypes
 from sys import platform
+
 LIBRARY = {"win32": "pixelbuster.dll", "linux": "libpixelbuster.so"}
 import os.path
+
 pixelbuster = ctypes.CDLL(
-    os.path.dirname(os.path.realpath(__file__)) +
-    "/../" + LIBRARY.get(platform)
-).pixelbuster_ffi
-pixelbuster.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint, ctypes.c_uint]
+    os.path.dirname(os.path.realpath(__file__)) + "/../" +
+    LIBRARY.get(platform))
+
+pixelbuster.pb_help_ffi.restype = ctypes.c_char_p
+HELP = pixelbuster.pb_help_ffi().decode('UTF-8')
+
+pixelbuster.pixelbuster_ffi.argtypes = [
+    ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint,
+    ctypes.c_uint
+]
+
 
 # Main function.
 def pixel_math(image, drawable, code):
@@ -58,10 +69,15 @@ def pixel_math(image, drawable, code):
         # create working rectangle area using mask intersect.
         rect = Gegl.Rectangle.new(x, y, width, height)
 
-        pixels = buff.get(rect, 1.0, "RGBA float",
-                          Gegl.AbyssPolicy.CLAMP)
+        pixels = buff.get(rect, 1.0, "RGBA float", Gegl.AbyssPolicy.CLAMP)
 
-        pixelbuster(code.encode('UTF-8'), "srgba".encode('UTF-8'), pixels, width, len(pixels))
+        pixelbuster.pixelbuster_ffi(
+            code.encode('UTF-8'),
+            "srgba".encode('UTF-8'),
+            pixels,
+            width,
+            len(pixels),
+        )
 
         shadow.set(rect, "RGBA float", bytes(pixels))
 
@@ -78,69 +94,15 @@ def pixel_math(image, drawable, code):
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
     "Pixel Math 2",  # name
-    pixel_math,    # function
+    pixel_math,  # function
     ParamString("Operations",
                 "g * r",
-                "See description for code documentation",
+                "See description for documentation",
                 ui_multiline=True,
-                ui_min_width=300, ui_min_height=300),
-
-    description="""\
-Pixel math. Code format is {channel} {operator} {value}
-c1 + 0.5 will add 0.5 to the first channel
-c1 ** 2 will raise c1 to the power of 2
-c1 sqrt c1 will set c1 to the square root of itself
-
-Everythin is case-insensitive, and *has* to be space-separated.
-
-Available channels:
-c1, c2, c3, c4. These are mapped to RGBA, HSLA, etc.
-
-You may also use the channel letters themselves, such as
-r, g, b, a
-
-The following is a list of valid operator strings and what they translate to
-"+=" | "+" | "add" => Op::Add,
-"-=" | "-" | "sub" => Op::Sub,
-"*=" | "*" | "mul" => Op::Mul,
-"/=" | "/" | "div" => Op::Div,
-"%=" | "%" | "mod" => Op::Mod,
-"**" | "^" | "pow" => Op::Pow,
-"=" | "set" => Op::Set,
-"abs" => Op::Abs,
-"acos" => Op::Acos,
-"acosh" => Op::Acosh,
-"asin" => Op::Asin,
-"asinh" => Op::Asinh,
-"atan" => Op::Atan,
-"atan2" => Op::Atan2,
-"atanh" => Op::Atanh,
-"cbrt" => Op::Cbrt,
-"ceil" => Op::Ceil,
-"cos" => Op::Cos,
-"cosh" => Op::Cosh,
-"floor" => Op::Floor,
-"log" => Op::Log,
-"max" => Op::Max,
-"min" => Op::Min,
-"round" => Op::Round,
-"sin" => Op::Sin,
-"sinh" => Op::Sinh,
-"sqrt" => Op::Sqrt,
-"tan" => Op::Tan,
-"tanh" => Op::Tanh,
-
-In addition to channels, you can store temporary values in variables.
-Available variables:
-v1, v2, v3...v9
-Plain 'v' is equal to v1.
-Using a variable before assigning it is undefined behavior.
-
-Finally, you have some constants:
-pi => pi
-e => euler's number
-rand => random value from 0.0 to 1.0""",
-    images="RGBA",
+                ui_min_width=300,
+                ui_min_height=300),
+    description=HELP,
+    images="*",
 )
 
 # register the plugin's Procedure class with gimp

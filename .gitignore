@@ -3,7 +3,7 @@ __pycache__/
 *.so
 
 # now it's own git
-pixelbuster/
+pixelbuster
 
 # Stored in separate git project as it's a generic Gtk 3 library useful (for me) outside of GIMP
 # The plugins all import the bszgw.py in the git root, so all changes apply
