@@ -39,14 +39,14 @@ from sys import platform
 LIBRARY = {"win32": "pixelbuster.dll", "linux": "libpixelbuster.so"}
 import os.path
 
-pixelbuster = ctypes.CDLL(
+pb_lib = ctypes.CDLL(
     os.path.dirname(os.path.realpath(__file__)) + "/../" +
     LIBRARY.get(platform))
 
-pixelbuster.pb_help_ffi.restype = ctypes.c_char_p
-HELP = pixelbuster.pb_help_ffi().decode('UTF-8')
+pb_lib.pb_help_ffi.restype = ctypes.c_char_p
+HELP = pb_lib.pb_help_ffi().decode('UTF-8')
 
-pixelbuster.pixelbuster_ffi.argtypes = [
+pb_lib.pixelbuster_ffi.argtypes = [
     ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_uint,
     ctypes.c_uint
 ]
@@ -71,7 +71,7 @@ def pixelbuster(image, drawable, code):
 
         pixels = buff.get(rect, 1.0, "RGBA float", Gegl.AbyssPolicy.CLAMP)
 
-        pixelbuster.pixelbuster_ffi(
+        pb_lib.pixelbuster_ffi(
             code.encode('UTF-8'),
             "srgba".encode('UTF-8'),
             pixels,
