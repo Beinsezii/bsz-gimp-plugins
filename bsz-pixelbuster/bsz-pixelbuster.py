@@ -53,7 +53,7 @@ pixelbuster.pixelbuster_ffi.argtypes = [
 
 
 # Main function.
-def pixel_math(image, drawable, code):
+def pixelbuster(image, drawable, code):
     # {{{
     # Fairly certain mask_intersect() is the current selection mask
     intersect, x, y, width, height = drawable.mask_intersect()
@@ -75,8 +75,8 @@ def pixel_math(image, drawable, code):
             code.encode('UTF-8'),
             "srgba".encode('UTF-8'),
             pixels,
-            width,
             len(pixels),
+            width,
         )
 
         shadow.set(rect, "RGBA float", bytes(pixels))
@@ -93,8 +93,8 @@ def pixel_math(image, drawable, code):
 
 # create the plugin from bsz_gimp_lib
 plugin = PlugIn(
-    "Pixel Math 2",  # name
-    pixel_math,  # function
+    "Pixelbuster",  # name
+    pixelbuster,  # function
     ParamString("Operations",
                 "g * r",
                 "See description for documentation",

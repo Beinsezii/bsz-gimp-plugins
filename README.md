@@ -81,28 +81,12 @@ Enter custom Python algorithms for pixel math.
 
 <img width=300 src="./bsz-pixel-math/during.png" />
 
-### Pixel Math 2
+### Pixelbuster
 Enter basic operations to perform pixel math. More limited, but processes well over 20x faster than Pixel Math in the worst scenarios.
 
-<img width=500 src="./bsz-pixel-math-2/during.png" />
+<img width=500 src="./bsz-pixelbuster/during.png" />
 
-Current features: 
- - individual channels in many formats
- - 9 variables to use
- - many math operators
-   - "+=" | "+" | "add"
-   - "-=" | "-" | "sub"
-   - "*=" | "*" | "mul"
-   - "/=" | "/" | "div"
-   - "%=" | "%" | "mod"
-   - "**" | "^" | "pow"
-   - "=" | "set"
-   - "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt", "ceil", "cos", "cosh", "floor", "log", "max", "min", "round", "sin", "sinh", "sqrt", "tan", "tanh"
- - constants
-   - pi
-   - e
-   - 'rand' - random number between 0.0 and 1.0
-
+See also the [pixelbuster repo](https://github.com/Beinsezii/pixelbuster)
 
 ## bsz_gimp_lib
 Shared library for plugins. Notably contains a *complete plugin auto-builder*. Similar to the old python-fu, but (imo) significantly more customizable at a mild complexity cost. Features include
