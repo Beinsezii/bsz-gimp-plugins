@@ -9,7 +9,7 @@ pixelbuster/build.sh
 zip -q bsz-gimp-plugins_${date}.zip \
     bsz_gimp_lib.py \
     bszgw.py \
-    pixelbuster.so \
+    libpixelbuster.so \
     pixelbuster.dll \
     bsz-*/bsz-*.py \
     bsz-*/*.dll \
