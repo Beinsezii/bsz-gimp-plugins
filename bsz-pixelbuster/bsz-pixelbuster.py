@@ -73,7 +73,7 @@ def pixelbuster(image, drawable, code):
 
         pb_lib.pixelbuster_ffi(
             code.encode('UTF-8'),
-            "srgba".encode('UTF-8'),
+            "lrgba".encode('UTF-8'),
             pixels,
             len(pixels),
             width,
