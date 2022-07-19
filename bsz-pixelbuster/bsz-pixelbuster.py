@@ -96,7 +96,12 @@ plugin = PlugIn(
     "Pixelbuster",  # name
     pixelbuster,  # function
     ParamString("Operations",
-                "g * r",
+                """# simple filmic-chroma
+LCH
+v1 = L
+v1 / 100
+v1 invert 1
+C * v1""",
                 "See description for documentation",
                 ui_multiline=True,
                 ui_min_width=300,
