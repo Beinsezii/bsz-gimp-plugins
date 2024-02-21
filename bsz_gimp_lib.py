@@ -544,7 +544,7 @@ and looks nicer I'll replace it ASAP."""
         # }}}
 
     # I decided to name the function called by the PDB procedure 'run'
-    def run(self, procedure, run_mode, image, n_drawables, drawables, args, run_data):
+    def run(self, procedure, run_mode, image, n_drawables, drawables, config, run_data):
         # convert the ValueArray into a regular list
         if n_drawables != 1:
             error = GLib.Error.new_literal(
@@ -559,15 +559,13 @@ and looks nicer I'll replace it ASAP."""
         else:
             drawable = drawables[0]
 
-        args = [args.index(x) for x in range(args.length())]
-
         # if no params and therefore no widgets always run non-interactive
         if self.params == ():
             run_mode = Gimp.RunMode.NONINTERACTIVE
 
         # run_mode 'NONINTERACTIVE' is if another plugin calls it through PDB
         if run_mode == Gimp.RunMode.NONINTERACTIVE:
-            self.function(image, drawable, *args)
+            self.function(image, drawable, **config)
 
         # run_mode 'WITH_LAST_VALS' is when you use Ctrl-F aka 'Repeat'
         # seems the gimp shelf isn't implemented yet?
